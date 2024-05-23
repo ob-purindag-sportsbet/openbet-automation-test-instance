@@ -31,34 +31,22 @@ the virtual environment.
 
 ## Usage
 
-Your _docker-compose_ project can be placed anywhere in your localhost, what is 
-required is for you to configure the parameters in the deployment YML which you 
-will create using the following steps.
+The  provided playbooks are located under `playbooks` directory.
 
-Deployment configuration has to be a `yml` file that you feed to the `launch` 
-command. Make a copy of the sample file provided as below
+Currently, there are two plaubooks available:
+1. Localhost provisioning
+2. AWS provisioning
 
-> `cp project_vars.yml.sample project-abc-deploy.yml`
+In order to create a new playbook, follow the steps:
+1. Create a new playbook under `playbooks` directory or anywhere you prefer.
+2. Update the playbook with the required parameters.
+3. Run the playbook using `./provisioner launch <playbook>.yml`
 
-
-#### Project Configuration
-
-Change the parameters in `project-abc-deploy.yml` to setup security groups and 
-instance to fit the AWS account you have.
-
-Following mandatory paths for the deployment config needs to be updated for 
-successfully deploying the  _docker-compose_ application.
-
-```
-# Project specific parameters
-project_prefix: "abc"           # this could be abbreviation of your company
-project_name: "ABC Project 1"   # human-readable project name used for resource tagging
-
-project_dirs: 
-  src: ./app.sample/
-  dest: /opt/app
-```
-
+Key points to remember when deploying a new playbook:
+1. If deploying to AWS cloud, make sure you have a `[default]` AWS profile setup with access keys under your 
+ `~/.aws/credentials`.
+2. You should be able to access the web interface of the app thought the 
+ _Public IP or URL_ of the instance (controlled by the `enable_http` configuration).
 
 #### AWS Authentication
 
@@ -71,26 +59,8 @@ profile section under `~/.aws/credentials` which playbook will use.
 
 ## What it does
 
-Running the playbook: `$ ./provisioner launch project-abc-deploy.yml` does the following:
+Running the playbook: `$ ./provisioner launch automation-instance.yml` does the following:
 
-1. Creates an instance based on the `project-abc-deploy.yml` with a security 
- group as per configuration.
-3. Installs Docker-Engine, Docker-Machine and Docker-Compose on the node.
-4. Runs tasks such as docker and compose
-
-## Deploying the Sample Application
-
-The sample application provided is located under `docs/sample/app.sample.` directory.
-This is a _docker-compose_ version 3 based Python + PHP application which has an
-Flask API and a PHP based frontend for demo purposes.
-
-In order to deploy this, follow the steps:
-
-1. `cp project_vars.yml.sample project-sample-app.yml`
-2. Edit `project-sample-app.yml` file and update `subnet`, `vpc_id`, `keypair`
- and `keypair_path` properties after referring to your AWS account.
-3. Make sure you have a `[default]` AWS profile setup with access keys under your 
- `~/.aws/credentials`.
-4. Deploy using `./daws launch project-sample-app.yml`
-5. You should be able to access the web interface of the app thought the 
- _Public IP or URL_ of the instance.
+1. Creates an instance (if doesnt exist based on tags used) as per the `automation-instance.yml`.
+2. Installs Docker-Engine, Docker-Compose and other software dependancies on the node.
+3. Runs tasks such as docker and compose (via openbet stack CLI)

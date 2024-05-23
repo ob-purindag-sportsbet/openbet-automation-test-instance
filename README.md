@@ -64,3 +64,8 @@ Running the playbook: `$ ./provisioner launch automation-instance.yml` does the 
 1. Creates an instance (if doesnt exist based on tags used) as per the `automation-instance.yml`.
 2. Installs Docker-Engine, Docker-Compose and other software dependancies on the node.
 3. Runs tasks such as docker and compose (via openbet stack CLI)
+
+### Additional Documentation
+
+* [Configuring Your Docker App for AWS](docs/aws-docker-app-configuration.md)
+* [Deploying the Sample Application](docs/sample-app-deployment.md)

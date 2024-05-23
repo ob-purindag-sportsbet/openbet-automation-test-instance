@@ -1,0 +1,22 @@
+---
+- name: Install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python
+    - curl
+    - apt-transport-https
+    - ca-certificates
+    - gnupg2
+    - software-properties-common
+
+- name: Depends for Ubuntu
+  include: "Ubuntu.yml"
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install docker
+  apt:
+    name: docker-ce
+    update_cache: yes
+    state: present

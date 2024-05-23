@@ -1,0 +1,58 @@
+---
+# AWS account credentials
+aws_profile: default
+
+# Region & VPC
+ec2_region: eu-west-2
+subnet: subnet-3018257a
+vpc_id: vpc-92a750fb
+
+# Project specific parameters
+project_label: "sample"
+project_name: "Sample Project"
+project_dirs: 
+  src: "{{ playbook_dir }}/../docs/sample/app.sample/"
+  dest: /opt/app
+
+# Instance parameters
+num_instances: 1
+instance_type: t2.micro
+instance_tags:
+  Name: "{{ project_label }}"
+  Team: "Your Team Name"
+  CostCentre: 1617
+keypair: "jordon-london"
+keypair_path: ~/.ssh/{{ keypair }}.pem
+ec2: { image: ami-5daa463a, user: ubuntu }
+
+# Launch commands, before attempting to install anything else; good opportunity to install configure AMI-specific items
+commands:
+  - apt-get update && apt-get -y install python
+
+# Update the following URL based on the RHEL/RedHat linux distro being used.
+ee:
+  enabled: false
+  url: ""
+  version: 7 
+
+# Security group rules
+security_group:
+  incoming_rules:
+    - proto: tcp
+      from_port: 80
+      to_port: 80
+      cidr_ip: 0.0.0.0/0
+    - proto: tcp
+      from_port: 443
+      to_port: 443
+      cidr_ip: 0.0.0.0/0
+    - proto: tcp
+      from_port: 22
+      to_port: 22
+      cidr_ip: 0.0.0.0/0
+
+  outgoing_rules:
+  - proto: -1
+    from_port: -1
+    to_port: -1
+    cidr_ip: 0.0.0.0/0

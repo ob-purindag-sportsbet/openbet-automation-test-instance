@@ -1,0 +1,11 @@
+---
+
+# EC2 instances variables and tags
+ec2:
+  image: ami-423bec20
+  user: ec2-user
+  public_ip: yes
+  volumes:
+    - device_name: /dev/xvda
+      volume_type: standard
+      volume_size: 20

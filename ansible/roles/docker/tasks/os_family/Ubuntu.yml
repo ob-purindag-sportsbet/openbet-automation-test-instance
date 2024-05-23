@@ -1,0 +1,17 @@
+---
+
+- name: Extra packages for Ubuntu
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - linux-image-extra-virtual
+    - python
+
+- name: Add docker repository for Ubuntu
+  shell: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+- name: Add key id
+  apt_key:
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    state: present

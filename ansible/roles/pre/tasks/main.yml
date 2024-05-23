@@ -1,0 +1,6 @@
+---
+
+- name: Prerequisit configuration
+  raw: "{{ item }}"
+  with_items: "{{ commands }}"
+  when: commands

@@ -1,0 +1,23 @@
+---
+- name: Running teardown for "{{ project_name }}" resources
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - group_vars/ec2.yml
+  vars:
+    ansible_ssh_private_key_file: "{{ keypair_path }}"
+
+  tasks:
+    - name: Terminating instances
+      ec2_instance:
+        vpc_subnet_id: "{{ subnet }}"
+        tags: "{{ instance_tags }}"
+        wait: true
+        state: absent
+
+    - name: Removing security groups
+      ec2_group:
+        name: "{{ project_label }}-sg"
+        state: absent
+        vpc_id: "{{ vpc_id }}"

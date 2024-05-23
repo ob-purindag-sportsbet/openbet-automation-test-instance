@@ -1,0 +1,79 @@
+---
+
+- name: Display all variables/facts known for a host
+  debug:
+    var: hostvars[inventory_hostname]
+    verbosity: 1
+
+- name: Add other bin dirs to system-wide $PATH.
+  copy:
+    dest: /etc/profile.d/custom-paths.sh
+    content: 'PATH=$PATH:{{ item }}'
+  with_items: custom_paths
+
+- name: Remove old versions of docker if installed
+  package:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - lxc-docker
+    - docker-engine
+    - docker
+    - docker-common
+    - docker.io
+
+- name: Install python-pip
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python-pip
+
+# `ansible_os_family` variable could contain one of the values below.
+# This part is extendable by adding the docker/docker-compose installation
+# and configuration steps required per distribution type under the 
+# `linux_distro_type` directory.
+#
+# AIX, Alpine, Altlinux, Archlinux, Darwin, Debian, FreeBSD, Gentoo, HP-UX
+# Mandrake, RedHat, SGML, Slackware, Solaris, Suse
+- name: Install docker and dependencies
+  include: "os_family/{{ ansible_os_family }}.yml"
+
+- name: Cleanup previous docker-py packages if installed
+  pip:
+    name: "{{ item }}"
+    state: absent
+  become: yes
+  with_items:
+    - docker
+    - docker-py
+    - docker-compose
+
+# TODO: On Amazom AMI's, was getting the following error when using Ansible PIP
+# module.
+# https://stackoverflow.com/questions/6200056/pip-broke-how-to-fix-distributionnotfound-error
+- name: Install docker-py and docker-compose
+  pip:
+    name: "{{ item }}"
+    state: present
+  become: yes
+  with_items:
+    - docker
+    - docker-compose
+    - PyYAML
+
+- name: Enable docker
+  service: 
+    enabled=yes 
+    name=docker
+
+- name: Restart docker
+  service:
+    name=docker
+    state=restarted
+  register: restart_status
+  until: restart_status is success
+  retries: 10
+  delay: 10
+  serial: 1
+  notify: "set docker service status"

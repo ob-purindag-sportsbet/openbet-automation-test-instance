@@ -1,0 +1,9 @@
+# Refer to https://docs.docker.com/install/linux/docker-ee/rhel/#set-up-the-repository
+
+---
+
+# Currently support Amazon AMIs and RedHat Enterprise Linux distros
+# Add your own distro specific tasks to target others.
+- name: Run the RHEL based install
+  include: "RHEL.yml"
+  when: ansible_distribution == "RedHat" | ansible_distribution == "Amazon"

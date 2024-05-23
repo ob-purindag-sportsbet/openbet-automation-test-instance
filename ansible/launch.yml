@@ -1,0 +1,79 @@
+---
+
+# The play operates on the local (Ansible control) machine and initialises
+# resources such as Security Groups and EC2 instances.
+- name: Running launch playbook for {{ project_name }}
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - group_vars/ec2.yml
+  vars:
+    ansible_ssh_private_key_file: "{{ keypair_path }}"
+
+  tasks:
+    - name: Configure EC2 Security Group.
+      ec2_group:
+        name: "{{ project_label }}-sg"
+        description: Security Group for {{ project_name }} Servers
+        state: present
+        vpc_id: "{{ vpc_id }}"
+        rules: "{{ security_group.incoming_rules }}"
+        rules_egress: "{{ security_group.outgoing_rules }}"
+
+    - name: Launch EC2 instances
+      ec2_instance:
+        key_name: "{{ keypair }}"
+        security_groups: "{{ project_label }}-sg"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ ec2.image }}"
+        vpc_subnet_id: "{{ subnet }}"
+        instance_initiated_shutdown_behavior: stop
+        tags: "{{ instance_tags }}"
+        wait: true
+        state: running
+      register: ec2_provisions
+
+    # Use with_items to add each instances public IP to a new hostgroup for use in the next play.
+    - name: Add running instances to the "launched" group
+      add_host: hostname={{ item.public_ip_address }} groupname=launched
+      with_items: "{{ ec2_provisions.instances }}"
+
+    - name: Wait for SSH to be available
+      wait_for:
+        host: "{{ item.public_ip_address }}"
+        port: 22
+        delay: 10
+        connect_timeout: 20
+        timeout: 300
+        state: started
+      with_items: "{{ ec2_provisions.instances }}"
+
+# Non-fact based pre-requisites
+- name: Base image setup
+  hosts: launched
+  become: yes
+  remote_user: "{{ ec2.user }}"
+  gather_facts: false
+  vars:
+    ansible_ssh_private_key_file: "{{ keypair_path }}"
+  vars_files:
+    - group_vars/ec2.yml
+    - group_vars/env.yml
+  roles:
+    - { role: pre, tags: pre }
+
+# This play targets the new host group "launched"
+- name: Configure instance
+  hosts: launched
+  become: yes
+  remote_user: "{{ ec2.user }}"
+  gather_facts: true
+  vars:
+    ansible_ssh_private_key_file: "{{ keypair_path }}"
+  vars_files:
+    - group_vars/ec2.yml
+    - group_vars/env.yml
+  roles:
+    - { role: docker, tags: docker }
+    - { role: compose, tags: compose }

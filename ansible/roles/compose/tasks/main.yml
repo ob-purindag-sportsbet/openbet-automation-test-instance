@@ -1,0 +1,17 @@
+---
+
+- name: Synchronise application files across to {{ project_name }} instances
+  synchronize:
+    src: "{{ project_dirs.src }}"
+    dest: "{{ project_dirs.dest }}"
+    mode: push
+    perms: yes
+    recursive: yes
+    links: yes
+    rsync_opts:
+      - "--exclude=.git"
+
+- name: Run docker-compose
+  shell: >
+   /usr/local/bin/docker-compose -f "{{ project_dirs.dest }}/docker-compose.yml" up -d
+  become: yes

@@ -1,0 +1,9 @@
+---
+
+- name: Add docker repository for Debian
+  shell: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+
+- name: Add GPG key
+  apt_key:
+    url: "https://download.docker.com/linux/debian/gpg"
+    state: present

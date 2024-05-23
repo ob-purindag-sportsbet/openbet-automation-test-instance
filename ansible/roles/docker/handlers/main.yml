@@ -1,0 +1,6 @@
+---
+
+- name: Set variable docker_service_restarted to "True"
+  set_fact:
+    docker_service_restarted: True
+  listen: "set docker service status"

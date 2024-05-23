@@ -1,0 +1,46 @@
+---
+# Cleaneup any previous docker versions installed.
+- name: Make sure distro specific docker engine and docker-compose are not installed
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - docker
+    - docker-common
+    - container-selinux
+    - docker-selinux
+    - docker-engine
+
+- name: Append Docker EE url
+  shell: "echo {{ item }}"
+  with_items:
+    - "{{ ee.url }} > /etc/yum/vars/dockerurl"
+    - "{{ ee.version }} > /etc/yum/vars/dockerosversion"
+  when: ee.enabled
+
+- name: Install yum-utils
+  yum:
+    name: yum-utils
+    state: present
+
+- name: Install docker repository
+  command: yum-config-manager --add-repo "{{ ee.url }}/docker-ee.repo"
+  when: ee.enabled
+
+- name: Install docker CE
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  with_items:
+    - docker
+  when: not ee.enabled
+
+- name: Install docker EE
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - docker-ee
+    - python-docker-py
+  when: ee.enabled

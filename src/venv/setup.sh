@@ -9,7 +9,7 @@ function venv_setup() {
 
     # Setup python virtual-env for setting up dependencies
     out_n "Checking virtualenv installation.."
-    sudo -H pip install -qIU --no-warn-conflicts virtualenv
+    sudo -H pip3 install -qIU --no-warn-conflicts virtualenv
     is_ok
 
     if [[ -d "${venv}" ]]; then
@@ -28,11 +28,11 @@ function venv_setup() {
     venv_activate
     is_ok
 
-    # Then install with pip will be inside that virtual environment
+    # Then install with pip3 will be inside that virtual environment
     out_n "Installing requirements.."
 
     # The ignore warnings is to squelch the InsecurePlatformWarnings that happen on some versions of Python
     PYTHONWARNINGS="ignore" \
-    pip install -qIr "${app}/var/pip-requirements.txt"
+    pip3 install -qIr "${app}/var/pip-requirements.txt"
     is_ok
 }

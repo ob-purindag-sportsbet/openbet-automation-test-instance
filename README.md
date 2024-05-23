@@ -1,10 +1,10 @@
-# Container Host Machine Provisioner for Automation Test Framework
+# Container Host Machine Provisioner
 
 For project goals and objectives, please refer to the Wiki article here
 https://wiki.openbet.com/display/SBP/SBT-41661+Automation+Test+Framework+Decoupling 
 
 This playbook has only *one* purpose and one alone which is to provision 
-Amazon EC2 instance docker host which runs the OpenBet applications stack used
+Amazon EC2 instances or local machines as docker hosts which runs the OpenBet applications stack used
 for running automation tests.
 
 The deploy.yml playbook creates an instance or instances required and provisions it 
@@ -27,7 +27,6 @@ the virtual environment.
 
     * Ansible>=2.0,<3.0
     * boto
-
 
 ## Usage
 
@@ -59,10 +58,16 @@ profile section under `~/.aws/credentials` which playbook will use.
 
 ## What it does
 
-Running the playbook: `$ ./provisioner launch automation-instance.yml` does the following:
+**For AWS provisioning**, the playbook does the following which is defined by the configuration `target` in the playbook.
+Running the playbook: `$ ./provisioner launch playbooks/automation-instance.yml` does the following:
 
 1. Creates an instance (if doesnt exist based on tags used) as per the `automation-instance.yml`.
 2. Installs Docker-Engine, Docker-Compose and other software dependancies on the node.
+3. Runs tasks such as docker and compose (via openbet stack CLI)
+
+**For local provisioning**, the playbook does the following:
+1. Ansible playbook runs on the localhost and provisions the localhost as a docker host.
+2. Makes sure the docker-engine and docker-compose are installed.
 3. Runs tasks such as docker and compose (via openbet stack CLI)
 
 ### Additional Documentation

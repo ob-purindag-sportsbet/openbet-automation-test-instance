@@ -7,11 +7,29 @@ source "${app}/src/venv/common.sh"
 # Executes an Ansible playbook
 function run_playbook() {
     local playbook="${venv}/bin/ansible-playbook"
-    local profile=$(grep 'aws_profile' $2 | tail -n1 | cut -d : -f 2 | awk '{$1=$1;print}');
 
     log "Run play: $1"
+    log "Playbook: ${playbook}"
     log "Project: $2"
-    log "AWS profile: ${profile}"
+    
+    local target=$(grep 'target' $2 | tail -n1 | cut -d : -f 2 | awk '{$1=$1;print}');
+
+    # if target is local machine, teardown should abort.
+    if [[ "$1" == "teardown" ]]; then
+        if [[ "${target}" == "local" ]]; then
+            err "Teardown not supported for local target"
+            return 1
+        fi
+    fi 
+
+    # Based on the `target` variable in the developer-machine.yml file, we can determine if targetting AWS or local
+    if [[ "${target}" == "aws" ]]; then
+        local profile=$(grep 'aws_profile' $2 | tail -n1 | cut -d : -f 2 | awk '{$1=$1;print}');
+        log "Target: AWS using ${profile} profile"
+    else
+        local profile="localhost profile"
+        log "Target: "
+    fi
 
     venv_activate
 

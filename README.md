@@ -20,7 +20,7 @@ Run the following to setup the virtualenv and install project dependencies
 
 > `./provisioner setup`
 
-Project requires `python >= 2.7`.
+Project requires `python >= 3`.
 
 Note: following is a list of dependencies that the install script will pull into
 the virtual environment.

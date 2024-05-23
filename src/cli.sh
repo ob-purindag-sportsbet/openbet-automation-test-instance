@@ -44,12 +44,12 @@ function cli_parse() {
                 ;;
             launch)
                 source "${app}/src/ansible/exec.sh"
-                daws_launch "$2"
+                instance_launch "$2"
                 shift 2
                 ;;
             teardown)
                 source "${app}/src/ansible/exec.sh"
-                daws_teardown "$2"
+                instance_teardown "$2"
                 shift 2
                 ;;
             help|--help|'-?')

@@ -1,11 +1,14 @@
-# Docker Provisioning for EC2 instances
+# Container Host Machine Provisioner for Automation Test Framework
+
+For project goals and objectives, please refer to the Wiki article here
+https://wiki.openbet.com/display/SBP/SBT-41661+Automation+Test+Framework+Decoupling 
 
 This playbook has only *one* purpose and one alone which is to provision 
-docker-_compose_ projects easily on Amazon EC2 service _regardless of the AMI or 
-linux distribution used_. 
+Amazon EC2 instance docker host which runs the OpenBet applications stack used
+for running automation tests.
 
-The deploy.yml playbook creates an instance or instances required and deploys 
-application and `docker-composer up -d` it.
+The deploy.yml playbook creates an instance or instances required and provisions it 
+if doesn't exist, then starts up the applications stack.
 
 
 ## Installation & Setup
@@ -15,7 +18,7 @@ from rest of your python modules/configuration on your system.
 
 Run the following to setup the virtualenv and install project dependencies
 
-> `./daws setup`
+> `./provisioner setup`
 
 Project requires `python >= 2.7`.
 
@@ -68,7 +71,7 @@ profile section under `~/.aws/credentials` which playbook will use.
 
 ## What it does
 
-Running the playbook: `$ ./daws launch project-abc-deploy.yml` does the following:
+Running the playbook: `$ ./provisioner launch project-abc-deploy.yml` does the following:
 
 1. Creates an instance based on the `project-abc-deploy.yml` with a security 
  group as per configuration.

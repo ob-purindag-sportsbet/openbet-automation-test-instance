@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Docker AWS Provisioning Toolkit
+# AWS Instance Provisioning Toolkit
 
 # Required for relative references to config files
 app=`python -c "import os; print(os.path.dirname(os.path.realpath(\"$0\")))"`
 
 # Name/version
-name="Docker Provisioning for EC2 instances"
+name="Docker Provisioner for EC2 instances"
 version=`cat ${app}/var/version`
 
 # Core settings
-eval venv="~/.docker-aws/venv"
-eval log="~/.docker-aws/log"
+eval venv="~/.provisioner/venv"
+eval log="~/.provisioner/log"
 
 # Runs the main app
 source "${app}/src/cli.sh"

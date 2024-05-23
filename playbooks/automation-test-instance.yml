@@ -1,4 +1,6 @@
 ---
+target: aws
+
 # AWS account credentials
 aws_profile: default
 
@@ -8,8 +10,8 @@ subnet: subnet-3018257a
 vpc_id: vpc-92a750fb
 
 # Project specific parameters
-project_label: "sample"
-project_name: "Sample Project"
+project_label: "Automation Test Instance"
+project_name: "qa-automation"
 project_dirs: 
   src: "{{ playbook_dir }}/../docs/sample/app.sample/"
   dest: /opt/app
@@ -21,7 +23,7 @@ instance_tags:
   Name: "{{ project_label }}"
   Team: "Your Team Name"
   CostCentre: 1617
-keypair: "jordon-london"
+keypair: "keypair-name"
 keypair_path: ~/.ssh/{{ keypair }}.pem
 ec2: { image: ami-5daa463a, user: ubuntu }
 

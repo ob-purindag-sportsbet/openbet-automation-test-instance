@@ -1,8 +1,8 @@
 ---
 target: local
 
-# AWS account credentials
-aws_profile: default
+# Local machine IP
+machine_ip: 10.211.55.4
 
 # Region & VPC
 ec2_region: eu-west-2
@@ -12,7 +12,7 @@ vpc_id: vpc-92a750fb
 # Project specific parameters
 project_label: "stack-provisioner"
 project_name: "Stack Provisioner"
-project_dirs: 
+project_dirs:
   src: "{{ playbook_dir }}/../docs/sample/app.sample/"
   dest: /opt/app
 

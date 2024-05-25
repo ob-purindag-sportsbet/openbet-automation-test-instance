@@ -1,5 +1,4 @@
 ---
-
 - name: Display all variables/facts known for a host
   debug:
     var: hostvars[inventory_hostname]
@@ -8,7 +7,7 @@
 - name: Add other bin dirs to system-wide $PATH.
   copy:
     dest: /etc/profile.d/custom-paths.sh
-    content: 'PATH=$PATH:{{ item }}'
+    content: "PATH=$PATH:{{ item }}"
   with_items: custom_paths
 
 - name: Remove old versions of docker if installed
@@ -31,7 +30,7 @@
 
 # `ansible_os_family` variable could contain one of the values below.
 # This part is extendable by adding the docker/docker-compose installation
-# and configuration steps required per distribution type under the 
+# and configuration steps required per distribution type under the
 # `linux_distro_type` directory.
 #
 # AIX, Alpine, Altlinux, Archlinux, Darwin, Debian, FreeBSD, Gentoo, HP-UX
@@ -63,17 +62,15 @@
     - PyYAML
 
 - name: Enable docker
-  service: 
-    enabled=yes 
+  service: enabled=yes
     name=docker
 
 - name: Restart docker
-  service:
-    name=docker
-    state=restarted
+  service: 
+    name: docker
+    state: restarted
   register: restart_status
-  until: restart_status is success
+  until: restart_status is not failed
   retries: 10
   delay: 10
-  serial: 1
   notify: "set docker service status"

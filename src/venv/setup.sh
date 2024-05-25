@@ -5,9 +5,6 @@ source "${app}/src/venv/common.sh"
 
 
 function venv_setup() {
-    log "Setting up configuration directories: ${settings}"
-    mkdir -p "${settings}/ansible/inventory/"
-
     # Setup python virtual-env for setting up dependencies
     log "Install venv: ${venv}"
     out_n "Checking virtualenv installation.."

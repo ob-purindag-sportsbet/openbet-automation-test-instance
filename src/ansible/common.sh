@@ -37,7 +37,7 @@ function run_playbook() {
         ANSIBLE_CONFIG="${app}/ansible/ansible.cfg" \
         ANSIBLE_FORCE_COLOR=true \
         AWS_PROFILE="${profile}" \
-        ${playbook} -i "dynamic_inventory.py $2" "${app}/ansible/$1.yml" --extra-vars="@$2" $(get_verbose_arg) 2>&1 | tee -a "${log}"
+        ${playbook} -i "${app}/ansible/inventory/dynamic_inventory.py $2" "${app}/ansible/$1.yml" --extra-vars="@$2" $(get_verbose_arg) 2>&1 | tee -a "${log}"
         return $?
     else
         err "Ansible Playbook binary is missing or not executable"

@@ -2,12 +2,10 @@
 target: local
 
 # Local machine IP
-machine_ip: 10.211.55.4
-
-# Region & VPC
-ec2_region: eu-west-2
-subnet: subnet-3018257a
-vpc_id: vpc-92a750fb
+instance:
+  machine_ip: 10.211.55.4
+  username: ubuntu
+  private_key_path: ~/.ssh/id_rsa
 
 # Project specific parameters
 project_label: "stack-provisioner"
@@ -15,9 +13,6 @@ project_name: "Stack Provisioner"
 project_dirs:
   src: "{{ playbook_dir }}/../docs/sample/app.sample/"
   dest: /opt/app
-
-# Instance parameters
-# NOT REQUIRED FOR LOCAL MACHINE
 
 # Launch commands, before attempting to install anything else; good opportunity to install configure AMI-specific items
 commands:
@@ -28,6 +23,3 @@ ee:
   enabled: false
   url: ""
   version: 7
-
-# Security group rules
-# NOT REQUIRED FOR LOCAL MACHINE

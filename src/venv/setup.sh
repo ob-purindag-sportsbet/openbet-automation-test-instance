@@ -5,9 +5,11 @@ source "${app}/src/venv/common.sh"
 
 
 function venv_setup() {
-    log "Install venv: ${venv}"
+    log "Setting up configuration directories: ${settings}"
+    mkdir -p "${settings}/ansible/inventory/"
 
     # Setup python virtual-env for setting up dependencies
+    log "Install venv: ${venv}"
     out_n "Checking virtualenv installation.."
     sudo -H pip3 install -qIU --no-warn-conflicts virtualenv
     is_ok

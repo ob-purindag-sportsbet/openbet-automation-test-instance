@@ -17,15 +17,18 @@ project_dirs:
   dest: /opt/app
 
 # Instance parameters
-num_instances: 1
-instance_type: t2.micro
-instance_tags:
-  Name: "{{ project_label }}"
-  Team: "Your Team Name"
-  CostCentre: 1617
-keypair: "keypair-name"
-keypair_path: ~/.ssh/{{ keypair }}.pem
-ec2: { image: ami-5daa463a, user: ubuntu }
+instance:
+  name: my-instance
+  instance_type: t2.micro
+  keypair: "keypair-name"
+  ssh_key: /path/to/key.pem
+  ssh_user: ec2-user
+  python_interpreter: /usr/bin/python3
+  ec2: { image: ami-5daa463a, user: ubuntu }
+  tags:
+    Name: "{{ project_label }}"
+    Team: "Your Team Name"
+  num_instances: 1
 
 # Launch commands, before attempting to install anything else; good opportunity to install configure AMI-specific items
 commands:

@@ -11,6 +11,7 @@ version=`cat ${app}/var/version`
 # Core settings
 eval venv="~/.provisioner/venv"
 eval log="~/.provisioner/log"
+eval settings="~/.provisioner/"
 
 # Runs the main app
 source "${app}/src/cli.sh"

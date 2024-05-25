@@ -1,5 +1,4 @@
 ---
-
 # EC2 instances variables and tags
 ec2:
   image: ami-423bec20

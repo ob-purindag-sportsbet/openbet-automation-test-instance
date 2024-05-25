@@ -37,7 +37,7 @@
 # AIX, Alpine, Altlinux, Archlinux, Darwin, Debian, FreeBSD, Gentoo, HP-UX
 # Mandrake, RedHat, SGML, Slackware, Solaris, Suse
 - name: Install docker and dependencies
-  include: "os_family/{{ ansible_os_family }}.yml"
+  include_tasks: "os_family/{{ ansible_os_family }}.yml"
 
 - name: Cleanup previous docker-py packages if installed
   pip:

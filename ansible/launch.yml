@@ -1,5 +1,4 @@
 ---
-
 # The play operates on the local (Ansible control) machine and initialises
 # resources such as Security Groups and EC2 instances.
 - name: Running launch playbook for {{ project_name }}

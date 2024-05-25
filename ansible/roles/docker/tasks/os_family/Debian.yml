@@ -12,7 +12,7 @@
     - software-properties-common
 
 - name: Depends for Ubuntu
-  include: "Ubuntu.yml"
+  include_tasks: "Ubuntu.yml"
   when: ansible_distribution == "Ubuntu"
 
 - name: Install docker

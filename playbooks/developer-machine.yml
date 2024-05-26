@@ -4,8 +4,8 @@ target: local
 # Local machine IP
 instance:
   machine_ip: 10.211.55.4
-  username: ubuntu
-  private_key_path: ~/.ssh/id_rsa
+  username: parallels
+  keypair_path: ~/.ssh/id_rsa
 
 # Project specific parameters
 project_label: "stack-provisioner"
@@ -16,7 +16,7 @@ project_dirs:
 
 # Launch commands, before attempting to install anything else; good opportunity to install configure AMI-specific items
 commands:
-  - apt-get update && apt-get -y install python
+  - apt-get update && apt-get -y install python3
 
 # Update the following URL based on the RHEL/RedHat linux distro being used.
 ee:

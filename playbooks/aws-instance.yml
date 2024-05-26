@@ -34,7 +34,7 @@ instance:
 
 # Launch commands, before attempting to install anything else; good opportunity to install configure AMI-specific items
 commands:
-  - apt-get update && apt-get -y install python
+  - apt-get update && apt-get -y install python3
 
 # Update the following URL based on the RHEL/RedHat linux distro being used.
 ee:

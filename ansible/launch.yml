@@ -5,13 +5,15 @@
   hosts: localhost
   connection: local
   gather_facts: false
+
+  # Common variables that apply to both local and AWS
   vars_files:
     - group_vars/ec2.yml
-  vars:
-    ansible_ssh_private_key_file: "{{ keypair_path }}"
+  # vars:
+  #   ansible_ssh_private_key_file: "{{ keypair_path }}"
 
   tasks:
-    - name: Configure EC2 Security Group.
+    - name: Configure EC2 Security Group (AWS only)
       ec2_group:
         name: "{{ project_label }}-sg"
         description: Security Group for {{ project_name }} Servers
@@ -19,8 +21,9 @@
         vpc_id: "{{ vpc_id }}"
         rules: "{{ security_group.incoming_rules }}"
         rules_egress: "{{ security_group.outgoing_rules }}"
+      when: target == 'aws'
 
-    - name: Launch EC2 instances
+    - name: Launch EC2 instances (AWS only)
       ec2_instance:
         key_name: "{{ keypair }}"
         security_groups: "{{ project_label }}-sg"
@@ -32,13 +35,16 @@
         wait: true
         state: running
       register: ec2_provisions
+      when: target == 'aws'
 
-    # Use with_items to add each instances public IP to a new hostgroup for use in the next play.
-    - name: Add running instances to the "launched" group
-      add_host: hostname={{ item.public_ip_address }} groupname=launched
-      with_items: "{{ ec2_provisions.instances }}"
+    - name: Add running instances to the 'launched' group (AWS only)
+      add_host:
+        hostname: "{{ item.public_ip_address }}"
+        groupname: launched
+      loop: "{{ ec2_provisions.instances }}"
+      when: target == 'aws'
 
-    - name: Wait for SSH to be available
+    - name: Wait for SSH to be available (AWS only)
       wait_for:
         host: "{{ item.public_ip_address }}"
         port: 22
@@ -46,33 +52,26 @@
         connect_timeout: 20
         timeout: 300
         state: started
-      with_items: "{{ ec2_provisions.instances }}"
+      loop: "{{ ec2_provisions.instances }}"
+      when: target == 'aws'
 
-# Non-fact based pre-requisites
+    - name: Add local machine to the 'launched' group (Local only)
+      add_host:
+        hostname: "{{ instance.machine_ip }}"
+        groupname: launched
+      when: target == 'local'
+
 - name: Base image setup
   hosts: launched
   become: yes
-  remote_user: "{{ ec2.user }}"
   gather_facts: false
-  vars:
-    ansible_ssh_private_key_file: "{{ keypair_path }}"
-  vars_files:
-    - group_vars/ec2.yml
-    - group_vars/env.yml
   roles:
     - { role: pre, tags: pre }
 
-# This play targets the new host group "launched"
 - name: Configure instance
   hosts: launched
   become: yes
-  remote_user: "{{ ec2.user }}"
   gather_facts: true
-  vars:
-    ansible_ssh_private_key_file: "{{ keypair_path }}"
-  vars_files:
-    - group_vars/ec2.yml
-    - group_vars/env.yml
   roles:
     - { role: docker, tags: docker }
     - { role: compose, tags: compose }

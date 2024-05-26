@@ -28,6 +28,7 @@ function run_playbook() {
     else
         local profile="localhost profile"
         log "Target: Local"
+        ask_sudo_pw="--ask-become-pass"
     fi
 
     venv_activate
@@ -41,7 +42,7 @@ function run_playbook() {
         ANSIBLE_CONFIG="${app}/ansible/ansible.cfg" \
         ANSIBLE_FORCE_COLOR=true \
         AWS_PROFILE="${profile}" \
-        ${playbook} -i "${app}/ansible/inventory/dynamic_inventory.py" --extra-vars="@$2" $(get_verbose_arg) "${app}/ansible/$1.yml" 2>&1 | tee -a "${log}"
+        ${playbook} -i "${app}/ansible/inventory/dynamic_inventory.py" ${ask_sudo_pw} --extra-vars="@$2" $(get_verbose_arg) "${app}/ansible/$1.yml" 2>&1 | tee -a "${log}"
         return $?
     else
         err "Ansible Playbook binary is missing or not executable"

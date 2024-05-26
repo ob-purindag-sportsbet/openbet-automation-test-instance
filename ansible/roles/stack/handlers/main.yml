@@ -1,0 +1,5 @@
+---
+- name: Reload bashrc for updated environment configuration
+  shell: "source ~/.bashrc"
+  args:
+    executable: /bin/bash

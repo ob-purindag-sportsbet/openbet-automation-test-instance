@@ -1,0 +1,12 @@
+---
+- name: Clone Sportsbet-stack repository
+  git:
+    repo: "{{ sportsbet_stack_repo_url }}"
+    dest: "{{ sportsbet_stack_repo_dest }}"
+    version: "{{ sportsbet_stack_repo_branch }}"
+
+- name: Create symlink for Sportsbet configuration
+  file:
+    src: "{{ sportsbet_symlink_src }}"
+    dest: "{{ sportsbet_symlink_dest }}"
+    state: link

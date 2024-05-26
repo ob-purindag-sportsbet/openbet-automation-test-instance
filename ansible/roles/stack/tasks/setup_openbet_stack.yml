@@ -1,0 +1,11 @@
+---
+- name: Clone Openbet-stack repository
+  git:
+    repo: '{{ openbet_stack_repo_url}}'
+    dest: "{{ openbet_stack_repo_dest }}"
+    version: "{{ openbet_stack_repo_branch }}"
+
+- name: Create directory for Stack configuration
+  file:
+    path: "{{ ansible_env.HOME }}/stack-configuration"
+    state: directory

@@ -1,0 +1,11 @@
+---
+- name: Ensure .bashrc includes necessary environment setup
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: "{{ item }}"
+    create: yes
+  with_items:
+    - 'export PATH=${PATH}:${HOME}/openbet-stack'
+    - 'export STACK_PROJECT_DIR=${HOME}/stack-configuration'
+    - 'source ${HOME}/openbet-stack/functions'
+  state: present

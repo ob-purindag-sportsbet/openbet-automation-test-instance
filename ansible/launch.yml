@@ -73,17 +73,14 @@
   become: yes
   gather_facts: true
   roles:
+    - { role: common, tags: common }
     - { role: docker, tags: docker }
     - { role: compose, tags: compose }
+    - { role: stack, tags: stack }
 
-# ---
-# - name: Setup Ubuntu Laptop for Application Stack
-#   hosts: localhost
-#   become: true
+# - name: Start up the Openbet Applications stack
+#   hosts: launched
+#   become: yes
+#   gather_facts: true
 #   roles:
-#     - common_tools
-#     - docker_setup
-#     - stack_tool_setup
-#     - environment_setup
-#     - app_deployment
-#     - documentation_training
+#     - { role: apps, tags: stack }

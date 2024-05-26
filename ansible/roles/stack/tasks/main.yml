@@ -1,0 +1,9 @@
+---
+- name: Setup Openbet Stack
+  include_tasks: setup_openbet_stack.yml
+
+- name: Setup Sportsbet Stack
+  include_tasks: setup_sportsbet_stack.yml
+
+- name: Configure user environment
+  include_tasks: configure_environment.yml

@@ -5,7 +5,7 @@ target: aws
 aws_profile: default
 
 # Region & VPC
-ec2_region: eu-west-2
+ec2_region: ap-southeast-2
 subnet: subnet-3018257a
 vpc_id: vpc-92a750fb
 
@@ -24,7 +24,9 @@ instance:
   ssh_key: /path/to/key.pem
   ssh_user: ec2-user
   python_interpreter: /usr/bin/python3
-  ec2: { image: ami-5daa463a, user: ubuntu }
+  ec2:
+    image: ami-5daa463a
+    user: ubuntu
   tags:
     Name: "{{ project_label }}"
     Team: "Your Team Name"

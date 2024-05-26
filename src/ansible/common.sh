@@ -27,24 +27,27 @@ function run_playbook() {
         log "Target: AWS using ${profile} profile"
     else
         local profile="localhost profile"
-        log "Target: "
+        log "Target: Local"
     fi
 
     venv_activate
 
     # Run the playbook
     if [[ -x "${playbook}" ]]; then
+        # Ansible doesn't allow passing the arguments to the dynamic_inventory script used in the ${playbook} command
+        # hence we need to export the variables here and refer to them in the dynamic_inventory script.
+        export INVENTORY_YAML_FILE=$2
+
         ANSIBLE_CONFIG="${app}/ansible/ansible.cfg" \
         ANSIBLE_FORCE_COLOR=true \
         AWS_PROFILE="${profile}" \
-        ${playbook} -i "${app}/ansible/inventory/dynamic_inventory.py $2" "${app}/ansible/$1.yml" --extra-vars="@$2" $(get_verbose_arg) 2>&1 | tee -a "${log}"
+        ${playbook} -i "${app}/ansible/inventory/dynamic_inventory.py" --extra-vars="@$2" $(get_verbose_arg) "${app}/ansible/$1.yml" 2>&1 | tee -a "${log}"
         return $?
     else
         err "Ansible Playbook binary is missing or not executable"
         return 1
     fi
 }
-
 
 # Get the appropriate CLI argument for Ansible's verbosity
 function get_verbose_arg() {

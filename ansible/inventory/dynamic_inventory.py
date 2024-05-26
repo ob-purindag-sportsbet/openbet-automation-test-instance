@@ -1,35 +1,82 @@
-# dynamic_inventory.py
+#!/usr/bin/env python3
+
 import json
 import yaml
-import sys
+import os
 
-# Get the YAML file name from the command line arguments
-filename = sys.argv[1]
+def load_yaml_file(filename):
+    with open(filename, 'r') as file:
+        return yaml.safe_load(file)
 
-with open(filename, 'r') as file:
-    data = yaml.safe_load(file)
+def create_local_inventory(data):
+    machine_ip = data['instance'].get('machine_ip')
+    username = data['instance'].get('username', 'ubuntu')
+    private_key_path = data['instance'].get('private_key_path', '~/.ssh/id_rsa')
 
-# Use the machine_ip as the host if it exists, otherwise use the name
-host = data['instance'].get('machine_ip', data['instance']['name'])
-
-inventory = {
-    'all': {
-        'hosts': [host],
-        'vars': {
-            'ansible_ssh_private_key_file': data['instance'].get('ssh_key', data['instance'].get('private_key_path')),
-            'ansible_user': data['instance'].get('ssh_user', data['instance'].get('username')),
-            'ansible_python_interpreter': data['instance'].get('python_interpreter', '/usr/bin/python3'),
-            'instance_type': data['instance'].get('instance_type'),
-            'keypair': data['instance'].get('keypair'),
-            'ec2_image': data['instance'].get('ec2', {}).get('image'),
-            'ec2_user': data['instance'].get('ec2', {}).get('user'),
-            'tags': data['instance'].get('tags'),
-            'num_instances': data['instance'].get('num_instances')
+    inventory = {
+        'all': {
+            'hosts': ['local_machine'],
+            'vars': {
+                'ansible_ssh_private_key_file': private_key_path,
+                'ansible_user': username,
+                'ansible_python_interpreter': data['instance'].get('python_interpreter', '/usr/bin/python3')
+            }
+        },
+        '_meta': {
+            'hostvars': {
+                'local_machine': {
+                    'ansible_host': machine_ip
+                }
+            }
         }
-    },
-    '_meta': {
-        'hostvars': {}
     }
-}
+    return inventory
 
-print(json.dumps(inventory))
+def create_aws_inventory(data):
+    profile = data.get('aws_profile', 'default')
+    instance_tags = data['instance'].get('tags', {})
+
+    inventory = {
+        'plugin': 'aws_ec2',
+        'regions': [data.get('ec2_region', 'us-east-1')],
+        'filters': {
+            'instance-state-name': 'running'
+        },
+        'keyed_groups': [
+            {
+                'key': 'tags.Name',
+                'prefix': 'tag'
+            }
+        ],
+        'hostnames': [
+            'tag:Name'
+        ],
+        'compose': {
+            'ansible_host': 'public_ip_address'
+        },
+        'strict': False,
+        'aws_profile': profile
+    }
+    return inventory
+
+def main():
+    yaml_file = os.getenv('INVENTORY_YAML_FILE')
+    if not yaml_file:
+        print("Error: INVENTORY_YAML_FILE environment variable not set.")
+        sys.exit(1)
+
+    data = load_yaml_file(yaml_file)
+
+    target = data.get('target')
+    if target == 'local':
+        inventory = create_local_inventory(data)
+    elif target == 'aws':
+        inventory = create_aws_inventory(data)
+    else:
+        print("Error: Unknown target specified in the YAML file")
+        sys.exit(1)
+
+    print(json.dumps(inventory, indent=2))
+
+if __name__ == "__main__":
+    main()

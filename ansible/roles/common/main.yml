@@ -1,0 +1,42 @@
+---
+- name: Install common utilities
+  ansible.builtin.apt:
+    name:
+      - curl
+      - vim
+      - git
+      - htop
+      - net-tools
+    state: present
+  become: yes
+
+- name: Install additional tools
+  ansible.builtin.apt:
+    name:
+      - tree
+      - wget
+      - unzip
+    state: present
+  become: yes
+
+- name: Check if snapd is installed for developer machine tools
+  ansible.builtin.command: snap --version
+  register: snapd_installed
+  failed_when: false
+  changed_when: false
+  when: target == 'local'
+
+- name: Install snapd package
+  ansible.builtin.apt:
+    name: snapd
+    state: present
+  when: target == 'local' && snapd_installed.rc != 0
+  become: yes
+
+- name: Install developer tools
+  ansible.builtin.shell: snap install {{ item }} --classic
+  loop:
+    - code  # Visual Studio Code
+    - slack
+  become: yes
+  when: target == 'local' && snapd_installed.rc == 0

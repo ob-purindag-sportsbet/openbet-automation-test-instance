@@ -75,3 +75,15 @@
   roles:
     - { role: docker, tags: docker }
     - { role: compose, tags: compose }
+
+# ---
+# - name: Setup Ubuntu Laptop for Application Stack
+#   hosts: localhost
+#   become: true
+#   roles:
+#     - common_tools
+#     - docker_setup
+#     - stack_tool_setup
+#     - environment_setup
+#     - app_deployment
+#     - documentation_training

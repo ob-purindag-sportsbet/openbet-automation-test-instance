@@ -38,7 +38,7 @@ def create_aws_inventory(data):
 
     inventory = {
         'plugin': 'aws_ec2',
-        'regions': [data.get('ec2_region', 'us-east-1')],
+        'regions': [data.get('ec2_region', 'ap-southeast-1')],
         'filters': {
             'instance-state-name': 'running'
         },

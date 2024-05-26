@@ -1,17 +1,58 @@
 ---
-
-- name: Extra packages for Ubuntu
+- name: Remove old Docker packages
   apt:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - linux-image-extra-virtual
-    - python
+    name:
+      - docker.io
+      - docker-doc
+      - docker-compose
+      - docker-compose-v2
+      - podman-docker
+      - containerd
+      - runc
+    state: absent
 
-- name: Add docker repository for Ubuntu
-  shell: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-- name: Add key id
-  apt_key:
-    url: "https://download.docker.com/linux/ubuntu/gpg"
+- name: Install pre-requisites for Docker
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
     state: present
+    update_cache: yes
+
+- name: Add Docker GPG key to keyring
+  ansible.builtin.shell:
+    cmd: >
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+      gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Docker repository release file doesn't have aarch64 architecture, so remap it to arm64 for compatibility
+# Not needed for x86_64 or amd64
+- name: Define Docker repository architecture
+  set_fact:
+    docker_repo_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
+
+- name: Set up the stable repository
+  apt_repository:
+    repo: "deb [arch={{ docker_repo_arch }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+    state: present
+    filename: docker-ce-stable
+
+- name: Install Docker Engine
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: latest
+    update_cache: yes
+
+- name: Ensure Docker service is enabled and running
+  systemd:
+    name: docker
+    enabled: yes
+    state: started

@@ -22,11 +22,17 @@
     state: present
     update_cache: yes
 
-- name: Add Docker GPG key to keyring
+- name: Check if Docker GPG keyring already exists
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/docker-archive-keyring.gpg
+  register: docker_gpg_keyring
+
+- name: Add Docker GPG key to keyring if it doesn't exist
   ansible.builtin.shell:
     cmd: >
       curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
       gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  when: not docker_gpg_keyring.stat.exists
 
 # Docker repository release file doesn't have aarch64 architecture, so remap it to arm64 for compatibility
 # Not needed for x86_64 or amd64

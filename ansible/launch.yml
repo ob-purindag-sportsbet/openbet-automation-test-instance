@@ -75,7 +75,7 @@
   roles:
     - { role: common, tags: common }
     - { role: docker, tags: docker }
-    - { role: compose, tags: compose }
+    # - { role: compose, tags: compose }
     - { role: stack, tags: stack }
 
 # - name: Start up the Openbet Applications stack

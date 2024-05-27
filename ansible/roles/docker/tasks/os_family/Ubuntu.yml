@@ -58,8 +58,11 @@
     state: latest
     update_cache: yes
 
-- name: Ensure Docker service is enabled and running
-  systemd:
-    name: docker
-    enabled: yes
-    state: started
+- name: Add user to Docker group
+  ansible.builtin.shell:
+    cmd: "usermod -aG docker {{ ansible_user }}"
+
+- name: Reset ssh connection to allow user group changes to affect ansible user and restart docker
+  ansible.builtin.meta:
+    reset_connection
+  notify: Restart Docker

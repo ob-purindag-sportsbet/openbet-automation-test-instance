@@ -5,7 +5,7 @@ target: local
 instance:
   machine_ip: 10.211.55.4
   username: parallels
-  keypair_path: ~/.ssh/id_rsa
+  ssh_key: ~/.ssh/id_rsa
 
 # Project specific parameters
 project_label: "stack-provisioner"

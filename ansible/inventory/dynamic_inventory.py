@@ -11,13 +11,13 @@ def load_yaml_file(filename):
 def create_local_inventory(data):
     machine_ip = data['instance'].get('machine_ip')
     username = data['instance'].get('username', 'ubuntu')
-    keypair_path = data['instance'].get('keypair_path', '~/.ssh/id_rsa')
+    ssh_key = data['instance'].get('ssh_key', '~/.ssh/id_rsa')
 
     inventory = {
         'all': {
             'hosts': ['local_machine'],
             'vars': {
-                'ansible_ssh_private_key_file': keypair_path,
+                'ansible_ssh_private_key_file': ssh_key,
                 'ansible_user': username,
                 'ansible_python_interpreter': data['instance'].get('python_interpreter', '/usr/bin/python3')
             }

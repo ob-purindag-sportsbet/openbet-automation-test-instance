@@ -4,7 +4,7 @@ In order to deploy an existing _docker-compose_ based project, follow the steps:
 
 1. Make a copy of the sample playbooks available in the `playbooks` directory.
 2. Edit `<your-playbook>.yml` file and update `subnet`, `vpc_id`, `keypair`
- and `keypair_path` properties after referring to your AWS account.
+ and `ssh_key` properties after referring to your AWS account.
 1. Make sure you have a `[default]` AWS profile setup with access keys under your 
  `~/.aws/credentials`.
 1. Deploy using `./provisioner launch <your-playbook>.yml`

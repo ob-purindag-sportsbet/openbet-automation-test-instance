@@ -17,31 +17,25 @@
 
 - name: Ensure the working directory is clean
   ansible.builtin.fail:
-    msg: "ERROR: Directory {{ ansible_env.PWD }} is not empty"
-  when: lookup('ansible.builtin.fileglob', ansible_env.PWD + '/*', wantlist=True) | length > 0
+    msg: "ERROR: Directory {{ release_base_dir }} is not empty"
+  when: lookup('ansible.builtin.fileglob', release_base_dir + '/*', wantlist=True) | length > 0
 
 - name: Clone and prepare each application
   block:
     - name: Clone repository for {{ item.name }}
       ansible.builtin.git:
         repo: "ssh://git@bitbucket.openbet.com:7999/sbt/{{ item.repo }}.git"
-        dest: "{{ ansible_env.PWD }}/{{ item.directory }}"
+        dest: "{{ release_base_dir }}/{{ item.directory }}"
         version: "{{ item.version }}"
         clone: yes
         update: yes
 
     - name: Set permissions for application directories
       ansible.builtin.file:
-        path: "{{ ansible_env.PWD }}/{{ item.directory }}"
+        path: "{{ release_base_dir }}/{{ item.directory }}"
         state: directory
         mode: '0777'
         recurse: yes
-
-    - name: Link current directory for application
-      ansible.builtin.file:
-        src: "{{ ansible_env.PWD }}/{{ item.directory }}"
-        dest: "{{ ansible_env.PWD }}/current_{{ item.name }}"
-        state: link
 
   loop: "{{ applications }}"
   when: item.name == get_app or get_app == ''
@@ -51,6 +45,6 @@
   ansible.builtin.shell:
     cmd: "mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:LATEST:unpack -Dproject.basedir=. -DoutputDirectory=. -DremoteRepositories=http://artifactory.int.openbet.com/artifactory/openbet-repository -Dartifact=com.openbet-sportsbet:{{ item.artifact }}:{{ item.version }}:tgz:static"
   args:
-    chdir: "{{ ansible_env.PWD }}/{{ item.directory }}"
+    chdir: "{{ release_base_dir }}/{{ item.directory }}"
   when: item.static == 'Y'
   loop: "{{ applications }}"

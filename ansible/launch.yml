@@ -81,9 +81,9 @@
   roles:
     - { role: stack, tags: stack }
 
-# - name: Start up the Openbet Applications stack
-#   hosts: launched
-#   become: yes
-#   gather_facts: true
-#   roles:
-#     - { role: apps, tags: stack }
+- name: Start up the Openbet Applications stack
+  hosts: launched
+  become: no
+  gather_facts: true
+  roles:
+    - { role: apps, tags: apps }

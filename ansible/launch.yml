@@ -11,47 +11,189 @@
     - group_vars/ec2.yml
 
   tasks:
-    - name: Configure EC2 Security Group (AWS only)
-      ec2_group:
-        name: "{{ project_label }}-sg"
-        description: Security Group for {{ project_name }} Servers
-        state: present
-        vpc_id: "{{ vpc_id }}"
-        rules: "{{ security_group.incoming_rules }}"
-        rules_egress: "{{ security_group.outgoing_rules }}"
-      when: target == 'aws'
+    # - name: Configure EC2 Security Group (AWS only)
+    #   ec2_group:
+    #     name: "{{ project_label }}-sg"
+    #     description: Security Group for {{ project_name }} Servers
+    #     state: present
+    #     vpc_id: "{{ vpc_id }}"
+    #     rules: "{{ security_group.incoming_rules }}"
+    #     rules_egress: "{{ security_group.outgoing_rules }}"
+    #   when: target == 'aws'
 
-    - name: Launch EC2 instances (AWS only)
-      ec2_instance:
-        key_name: "{{ keypair }}"
-        security_groups: "{{ project_label }}-sg"
-        instance_type: "{{ instance_type }}"
-        image_id: "{{ ec2.image }}"
-        vpc_subnet_id: "{{ subnet }}"
-        instance_initiated_shutdown_behavior: stop
-        tags: "{{ instance_tags }}"
-        wait: true
-        state: running
-      register: ec2_provisions
-      when: target == 'aws'
+    # - name: Launch EC2 instances (AWS only)
+    #   ec2_instance:
+    #     key_name: "{{ keypair }}"
+    #     security_groups: "{{ project_label }}-sg"
+    #     instance_type: "{{ instance_type }}"
+    #     image_id: "{{ ec2.image }}"
+    #     vpc_subnet_id: "{{ subnet }}"
+    #     instance_initiated_shutdown_behavior: stop
+    #     tags: "{{ instance_tags }}"
+    #     wait: true
+    #     state: running
+    #   register: ec2_provisions
+    #   when: target == 'aws'
 
-    - name: Add running instances to the 'launched' group (AWS only)
-      add_host:
-        hostname: "{{ item.public_ip_address }}"
-        groupname: launched
-      loop: "{{ ec2_provisions.instances }}"
-      when: target == 'aws'
+    # - name: Add running instances to the 'launched' group (AWS only)
+    #   add_host:
+    #     hostname: "{{ item.public_ip_address }}"
+    #     groupname: launched
+    #   loop: "{{ ec2_provisions.instances }}"
+    #   when: target == 'aws'
 
-    - name: Wait for SSH to be available (AWS only)
-      wait_for:
-        host: "{{ item.public_ip_address }}"
-        port: 22
-        delay: 10
-        connect_timeout: 20
-        timeout: 300
-        state: started
-      loop: "{{ ec2_provisions.instances }}"
-      when: target == 'aws'
+    # - name: Wait for SSH to be available (AWS only)
+    #   wait_for:
+    #     host: "{{ item.public_ip_address }}"
+    #     port: 22
+    #     delay: 10
+    #     connect_timeout: 20
+    #     timeout: 300
+    #     state: started
+    #   loop: "{{ ec2_provisions.instances }}"
+    #   when: target == 'aws'
+
+    - name: "Deploying Openbet Common IAM Stack: {{ CommonIAMStack }}"
+      cloudformation:
+        stack_name: "{{ CommonIAMStack }}"
+        state: "{{ State }}"
+        region: "{{ Region }}"
+        create_changeset: "{{ ChangeSet }}"
+        disable_rollback: true
+        template: "roles/instance/templates/iam.yml"
+        template_parameters:
+          StackPrefix: "{{ StackPrefix }}"
+          StackId: common
+          InfraBuildBucket: "{{ InfraBuildBucket }}"
+          AppBuildBucket: "{{ AppBuildBucket }}"
+        termination_protection: "{{ TerminationProtection }}"
+        tags:
+          Name: "{{ CommonIAMStack }}"
+          User: "{{ ApplicationUser }}"
+          CostCentre: "{{ CostCentre }}"
+          Description: "{{ Project }} {{ Service }} Common IAM Stack"
+          Project: "{{ Project }}"
+      register: logs
+      tags:
+        - common
+
+    - name: "Deploying Openbet Common Security Stack: {{ CommonSecurityStack }}"
+      cloudformation:
+        stack_name: "{{ CommonSecurityStack }}"
+        state: "{{ State }}"
+        region: "{{ Region }}"
+        create_changeset: "{{ ChangeSet }}"
+        disable_rollback: true
+        template: "roles/instance/templates/security.yml"
+        template_parameters:
+          StackPrefix: "{{ StackPrefix }}"
+          StackId: common
+          AlbPort: "{{ AlbPort }}"
+          AlbPortSSL: "{{ AlbPortSSL }}"
+          InstancePort: "{{ InstancePort }}"
+        termination_protection: "{{ TerminationProtection }}"
+        tags:
+          Name: "{{ CommonSecurityStack }}"
+          User: "{{ ApplicationUser }}"
+          CostCentre: "{{ CostCentre }}"
+          Description: "{{ Project }} {{ Service }} Common Security Stack"
+          Project: "{{ Project }}"
+      register: logs
+      tags:
+      - deploy
+
+    - name: "Deploying OpenBet Stack: {{ AppStack }}"
+      cloudformation:
+        stack_name: "{{ AppStack }}"
+        state: "{{ State }}"
+        region: "{{ Region }}"
+        create_changeset: "{{ ChangeSet }}"
+        disable_rollback: true
+        template: "roles/instance/templates/deploy.yml"
+        template_parameters:
+          StackPrefix: "{{ StackPrefix }}"
+          StackId: "{{ StackId }}"
+          StackSize: "{{ StackSize }}"
+          AppId: "{{ AppId | default('') }}"
+          Project: "{{ Project }}"
+          Service: "{{ Service }}"
+          Environment: "{{ Environment }}"
+          CostCentre: "{{ CostCentre }}"
+          ApplicationUser: "{{ ApplicationUser }}"
+          Ami: "{{ AMI }}"
+          isSiteManagedBox: "{{ isSiteManagedBox  }}"
+          MinSize: "{{ MinSize }}"
+          DesiredCapacity: "{{ DesiredCapacity }}"
+          MaxSize: "{{ MaxSize }}"
+          MinSuccessfulPercent: "{{ MinSuccessfulPercent }}"
+          InstanceType: "{{ InstanceType }}"
+          AlbTier: "{{ AlbTier }}"
+          AlbHealthCheck: "{{ AlbHealthCheck }}"
+          AlbPort: "{{ AlbPort }}"
+          AlbPortSSL: "{{ AlbPortSSL }}"
+          AlbTimeout: "{{ AlbTimeout }}"
+          InstancePort: "{{ InstancePort }}"
+          AlbLoggingEnabled: "{{ AlbLoggingEnabled }}"
+          KeyName: "{{ KeyName }}"
+          CreateAlarms: "{{ CreateAlarms | lower }}"
+          AutoScalingState: "{{ AutoScalingState }}"
+          EstimatedInstanceWarmup: "{{ EstimatedInstanceWarmup }}"
+          CPUPolicyTargetValue: "{{ CPUPolicyTargetValue }}"
+          BootstrapScriptS3Path: "{{ BootstrapScriptS3Path }}"
+          ForceSuccess: "{{ ForceSuccess | lower }}"
+          DisableLaunchLifecycleHook: "{{ DisableLaunchLifecycleHook | lower }}"
+          DisableLogsBackupLifecycleHook: "{{ DisableLogsBackupLifecycleHook | lower }}"
+          EnableGroupMetricsCollection: "{{ EnableGroupMetricsCollection | lower }}"
+          MemcachedAccessSG: "{{ MemcachedAccessSG }}"
+          ELBDNSHostname: "{{ ELBDNSHostname }}"
+          LiveRollingDeployment: "{{ LiveRollingDeployment | lower }}"
+          RootVolumeSize: "{{ RootVolumeSize }}"
+          AppVolume1Size: "{{ AppVolume1Size }}"
+          AppVolume1Type: "{{ AppVolume1Type }}"
+          EbsOptimized: "{{ EbsOptimized | lower }}"
+          AttachToPrivateFrontend: "{{ AttachToPrivateFrontend | lower }}"
+          AttachToPublicFrontend: "{{ AttachToPublicFrontend | lower }}"
+          FrontendService: "{{ FrontendService }}"
+          NttInformixAccess: "{{ NttInformixAccess | lower }}"
+          isUserApiApp: "{{ isUserApiApp | lower }}"
+          AlarmThreshold5xx: "{{ AlarmThreshold5xx }}"
+          AlarmUrgency: "{{ AlarmUrgency }}"
+          EnableScheduledScaling: "{{ EnableScheduledScaling }}"
+          ScheduledScalingList: "{{ ScheduledScalingList }}"
+          RedirectHttpToHttps: "{{ RedirectHttpToHttps | lower }}"
+          EnableHighLoadEventScaling: "{{ EnableHighLoadEventScaling | lower }}"
+          HighLoadEventMinSize: "{{ HighLoadEventMinSize }}"
+          EnableStlRateScaling: "{{ EnableStlRateScaling }}"
+          StlRateThreshold: "{{ StlRateThreshold }}"
+          TreatMissingDataAs: "{{ TreatMissingDataAs }}"
+          EnableLoadTestProfile: "{{ EnableLoadTestProfile | lower }}"
+          LoadTestProfileList: "{{ LoadTestProfileList }}"
+          AssociateWebACL: "{{AssociateWebACL}}"
+        termination_protection: "{{ TerminationProtection }}"
+        tags:
+          Name: "{{ AppStack }}"
+          User: "{{ ApplicationUser }}"
+          CostCentre: "{{ CostCentre }}"
+          Description: "{{ Project }} {{ Service }} App Stack"
+          Project: "{{ Project }}"
+          Service: "{{ Service }}"
+          Contact: "{{ Contact }}"
+          Environment: "{{ Environment }}"
+          BackupType: "{{ BackupType }}"
+          HA: "{{ HA }}"
+          PatchMethod: "{{ PatchMethod }}"
+          Repository: "{{ Repository }}"
+          PublicFacing: "{{ PublicFacing }}"
+          InformationSubClassification: "{{ InformationSubClassification }}"
+          CrowdStrike: "{{ CrowdStrike }}"
+      register: logs
+      tags:
+      - deploy
+
+    - debug:
+        var: logs
+      tags:
+      - deploy
 
     - name: Add local machine to the 'launched' group (Local only)
       add_host:

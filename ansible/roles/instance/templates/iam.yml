@@ -1,0 +1,275 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: OpenBet Application Common - IAM
+
+Parameters:
+  StackPrefix:
+    Description: Stack Prefix
+    Type: String
+  StackId:
+    Description: Stack Identifier
+    Type: String
+  InfraBuildBucket:
+    Description: Bucket for S3 infrastructure builds
+    Type: String
+  AppBuildBucket:
+    Description: Bucket for S3 application builds
+    Type: String
+
+Resources:
+  IamInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - !ImportValue SportsbetSecurityInstancesPolicy-master
+
+  # EC2 Permissions
+  IamEc2Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamEc2Policy
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+          - ec2:CreateTags
+          - ec2:DeleteTags
+          - ec2:DescribeTags
+          - ec2:CreateSnapshot
+          - ec2:DeleteSnapshot
+          - ec2:ModifySnapshotAttribute
+          - ec2:AttachVolume
+          - ec2:CreateVolume
+          - ec2:DeleteVolume
+          - ec2:DescribeVolumes
+          - ec2:DetachVolume
+          - ec2:ModifyInstanceAttribute
+          - ec2:AttachNetworkInterface
+          - ec2:DetachNetworkInterface
+          Resource:
+          - '*'
+
+  # Other AWS Resources that the instance may need read access to learn about it's environment
+  IamReadonlyPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamReadonlyPolicy
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+          - autoscaling:Describe*
+          - cloudformation:DescribeStacks
+          - cloudformation:DescribeStackEvents
+          - cloudformation:DescribeStackResources
+          - cloudformation:GetTemplate
+          - cloudformation:List*
+          - cloudwatch:Describe*
+          - cloudwatch:Get*
+          - cloudwatch:List*
+          - directconnect:Describe*
+          - ec2:Describe*
+          - elasticloadbalancing:Describe*
+          - iam:List*
+          - iam:Get*
+          - route53:Get*
+          - route53:List*
+          - s3:Get*
+          - s3:List*
+          - sns:Get*
+          - sns:List*
+          - sqs:GetQueueAttributes
+          - sqs:ListQueues
+          - ssm:GetParameter
+          - ssm:GetParameters
+          - ssm:GetParametersByPath
+          Resource:
+          - '*'
+
+  # S3 readonly buckets - TODO this needs to be narrowed down
+  IamS3ReadonlyPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamS3ReadonlyPolicy
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:Get*
+          - s3:List*
+          Resource:
+          - !Sub 'arn:aws:s3:::${InfraBuildBucket}*/*'
+          - !Sub 'arn:aws:s3:::${InfraBuildBucket}*'
+          - !Sub 'arn:aws:s3:::${AppBuildBucket}*/*'
+          - !Sub 'arn:aws:s3:::${AppBuildBucket}*'
+          - Fn::Join: ['', ['arn:aws:s3:::', !ImportValue sb-openbet-logs-bucket, '*/*']]
+          - Fn::Join: ['', ['arn:aws:s3:::', !ImportValue sb-openbet-logs-bucket, '*']]
+
+  # S3 read/write buckets - TODO this needs to be narrowed down
+  IamS3WritePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamS3WritePolicy
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:AbortMultipartUpload
+          - s3:DeleteObject
+          - s3:DeleteObjectVersion
+          - s3:GetBucketAcl
+          - s3:GetBucketLocation
+          - s3:GetBucketLogging
+          - s3:GetBucketNotification
+          - s3:GetBucketPolicy
+          - s3:GetBucketRequestPayment
+          - s3:GetBucketTagging
+          - s3:GetBucketVersioning
+          - s3:GetBucketWebsite
+          - s3:GetLifecycleConfiguration
+          - s3:GetObject
+          - s3:GetObjectAcl
+          - s3:GetObjectTorrent
+          - s3:GetObjectVersion
+          - s3:GetObjectVersionAcl
+          - s3:GetObjectVersionTorrent
+          - s3:ListAllMyBuckets
+          - s3:ListBucket
+          - s3:ListBucketMultipartUploads
+          - s3:ListBucketVersions
+          - s3:ListMultipartUploadParts
+          - s3:PutBucketVersioning
+          - s3:PutLifecycleConfiguration
+          - s3:PutObject
+          - s3:PutObjectAcl
+          - s3:PutObjectVersionAcl
+          Resource:
+          - !Sub 'arn:aws:s3:::${InfraBuildBucket}*/*'
+          - !Sub 'arn:aws:s3:::${InfraBuildBucket}*'
+          - Fn::Join: ['', ['arn:aws:s3:::', !ImportValue sb-openbet-logs-bucket, '*/*']]
+          - Fn::Join: ['', ['arn:aws:s3:::', !ImportValue sb-openbet-logs-bucket, '*']]
+
+  IamSnsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamSnsPolicy
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+          - sns:publish
+          Resource:
+          - !Sub arn:aws:sns:${AWS::Region}:*:openbet*
+
+  IamCloudwatchPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamCloudwatchPolicy
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+          - cloudwatch:DisableAlarmActions
+          - cloudwatch:EnableAlarmActions
+          - cloudwatch:DeleteAlarms
+          - cloudwatch:DescribeAlarms
+          - cloudwatch:PutMetricAlarm
+          - cloudwatch:PutMetricData
+          Resource:
+          - '*'
+
+  IamSecretsPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamSecretsPolicy
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource:
+          - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${StackPrefix}-*'
+
+  IamCompleteAutoscalingLifecycleAction:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: IamCompleteAutoscalingLifecycleAction
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+            - autoscaling:DescribeAutoScalingInstances
+          Resource:
+            - '*'
+        - Effect: Allow
+          Action:
+            - autoscaling:CompleteLifecycleAction
+          Resource:
+            # yamllint disable-line rule:line-length
+            - !Sub arn:${AWS::Partition}:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${StackPrefix}-*
+
+  StsAssumeRole:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: StsAssumeRole
+      Roles:
+      - !Ref IamInstanceRole
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Action:
+            - sts:AssumeRole
+          Resource:
+            - '*'
+
+  IamDefaultInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - !Ref IamInstanceRole
+
+Outputs:
+  ExportIamDefaultInstanceProfile:
+    Description:  Application IAM Default Instance Profile
+    Value:
+      !Ref IamDefaultInstanceProfile
+    Export:
+      Name: !Sub "${StackPrefix}-${StackId}-iam-default"
+
+  ExportIamInstanceRole:
+    Description:  Application IAM Instance Role
+    Value: !Ref IamInstanceRole
+    Export:
+      Name: !Sub "${StackPrefix}-${StackId}-iam-role"
+
+  ExportIamInstanceRoleArn:
+    Description:  Application IAM Instance Role Arn
+    Value: !GetAtt [IamInstanceRole, Arn]
+    Export:
+      Name: !Sub "${StackPrefix}-${StackId}-iam-role-arn"

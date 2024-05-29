@@ -1,12 +1,19 @@
 ---
-- name: Clone Sportsbet-stack repository
-  git:
-    repo: "{{ sportsbet_stack_repo_url }}"
-    dest: "{{ sportsbet_stack_repo_dest }}"
-    version: "{{ sportsbet_stack_repo_branch }}"
+- name: Running Sportsbet-stack setup tasks
+  block:
+  - name: Clone Sportsbet-stack repository
+    git:
+      repo: "{{ sportsbet_stack_repo_url }}"
+      dest: "{{ sportsbet_stack_repo_dest }}"
+      version: "{{ sportsbet_stack_repo_branch }}"
 
-- name: Create symlink for Sportsbet configuration
-  file:
-    src: "{{ sportsbet_symlink_src }}"
-    dest: "{{ sportsbet_symlink_dest }}"
-    state: link
+  - name: Create symlink for Sportsbet configuration
+    file:
+      src: "{{ sportsbet_symlink_src }}"
+      dest: "{{ sportsbet_symlink_dest }}"
+      state: link
+
+  become: yes
+  become_user: "{{ ansible_user }}"
+  become_method: su
+  become_flags: '--login'

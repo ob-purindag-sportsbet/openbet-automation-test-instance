@@ -66,24 +66,12 @@
   roles:
     - { role: pre, tags: pre }
 
-- name: Configure common packages and docker engine
+- name: Configure Instance and OpenBet Applications
   hosts: launched
   become: yes
   gather_facts: true
   roles:
     - { role: common, tags: common }
     - { role: docker, tags: docker }
-
-- name: Configure OpenBet stack
-  hosts: launched
-  become: no
-  gather_facts: true
-  roles:
     - { role: stack, tags: stack }
-
-- name: Start up the Openbet Applications stack
-  hosts: launched
-  become: no
-  gather_facts: true
-  roles:
-    - { role: apps, tags: apps }
+    - { role: apps, tags: stack }

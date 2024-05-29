@@ -1,6 +1,6 @@
 ---
 
-- name: Prerequisit configuration
+- name: Setting up instance pre-requisites (apt update, python3, etc.)
   raw: "{{ item }}"
   with_items: "{{ commands }}"
   when: commands

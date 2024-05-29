@@ -1,5 +1,7 @@
 ---
 release_base_dir: "/home/{{ ansible_user }}/git_src/releases"
+# cashcard consumer 
+# cashcard consumer build
 
 applications:
   - name: "db"
@@ -8,6 +10,7 @@ applications:
     directory: "sportsbet-release-sources"
     version: "latest"
     static: "N"
+    mvn: "N"
 
   - name: "core"
     repo: "parent-build"
@@ -15,6 +18,7 @@ applications:
     directory: "sportsbet-release-sources"
     version: "latest"
     static: "Y"
+    mvn: "Y"
 
   - name: "obmw"
     repo: "obmw-build"
@@ -22,6 +26,7 @@ applications:
     directory: "sportsbet-release-sources/obmw"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "stl_engine"
     repo: "settlement-engine-build"
@@ -29,6 +34,7 @@ applications:
     directory: "sportsbet-stl-engine-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "oxiapi"
     repo: "oxi-api-build"
@@ -36,6 +42,7 @@ applications:
     directory: "sportsbet-oxi-api-release-source"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "AF"
     repo: "activity-feeds-build"
@@ -43,6 +50,7 @@ applications:
     directory: "sportsbet-activity-feeds-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "livepublish"
     repo: "livepublish-build"
@@ -50,6 +58,7 @@ applications:
     directory: "sportsbet-livepublish-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "ntt_audit_java"
     repo: "ntt-audit-java-build"
@@ -57,6 +66,7 @@ applications:
     directory: "sportsbet-ntt-audit-java-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "HUC"
     repo: "hier-upd-consumer-build"
@@ -64,6 +74,7 @@ applications:
     directory: "hierarchy-update-consumer-release/sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   # Double check the below apps list to make sure paths are correct
   - name: "parent_build"
@@ -72,6 +83,7 @@ applications:
     directory: "sportsbet-parent-build-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "oxiapi_build"
     repo: "oxi-api-build"
@@ -79,6 +91,7 @@ applications:
     directory: "sportsbet-oxi-api-build-release-source"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "obmw_build"
     repo: "obmw-build"
@@ -86,6 +99,7 @@ applications:
     directory: "sportsbet-release-sources/obmw-build"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "AF_build"
     repo: "activity-feeds-build"
@@ -93,6 +107,7 @@ applications:
     directory: "sportsbet-activity-feeds-build-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "settlement_engine_build"
     repo: "settlement-engine-build"
@@ -100,6 +115,7 @@ applications:
     directory: "sportsbet-settlement-engine-build-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "livepublish_build"
     repo: "livepublish-build"
@@ -107,6 +123,7 @@ applications:
     directory: "sportsbet-livepublish-build-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "ntt_audit_java_build"
     repo: "ntt-audit-java-build"
@@ -114,6 +131,7 @@ applications:
     directory: "sportsbet-ntt-audit-java-build-release-sources"
     version: "latest"
     static: "N"
+    mvn: "Y"
 
   - name: "HUC_build"
     repo: "hier-upd-consumer-build"
@@ -121,3 +139,4 @@ applications:
     directory: "hierarchy-update-consumer-build-release/sources"
     version: "latest"
     static: "N"
+    mvn: "Y"

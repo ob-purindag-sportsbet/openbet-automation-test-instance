@@ -29,22 +29,33 @@
         version: "{{ item.version }}"
         clone: yes
         update: yes
+      with_items: "{{ applications }}"
+      # when: item.name == get_app or get_app == ''
+      register: setup_info_clone
 
     - name: Set permissions for application directories
       ansible.builtin.file:
-        path: "{{ release_base_dir }}/{{ item.directory }}"
+        path: "{{ release_base_dir }}/{{ item.0.directory }}"
         state: directory
         mode: '0777'
         recurse: yes
-
-  loop: "{{ applications }}"
-  when: item.name == get_app or get_app == ''
-  register: setup_info
+      with_items: "{{ setup_info_clone.results }}"
+      # when: item.0.name == get_app or get_app == ''
+      loop_control:
+        loop_var: item.0
 
 - name: Work on static artifacts
   ansible.builtin.shell:
     cmd: "mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:LATEST:unpack -Dproject.basedir=. -DoutputDirectory=. -DremoteRepositories=http://artifactory.int.openbet.com/artifactory/openbet-repository -Dartifact=com.openbet-sportsbet:{{ item.artifact }}:{{ item.version }}:tgz:static"
-  args:
-    chdir: "{{ release_base_dir }}/{{ item.directory }}"
+    args:
+      chdir: "{{ release_base_dir }}/{{ item.directory }}"
   when: item.static == 'Y'
-  loop: "{{ applications }}"
+  with_items: "{{ applications }}"
+
+# - name: Work on static artifacts
+#   ansible.builtin.shell:
+#     cmd: "mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:LATEST:unpack -Dproject.basedir=. -DoutputDirectory=. -DremoteRepositories=http://artifactory.int.openbet.com/artifactory/openbet-repository -Dartifact=com.openbet-sportsbet:{{ item.artifact }}:{{ item.version }}:tgz:static"
+#   args:
+#     chdir: "{{ release_base_dir }}/{{ item.directory }}"
+#   when: item.static == 'Y'
+#   loop: "{{ applications }}"

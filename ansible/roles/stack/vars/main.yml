@@ -1,12 +1,12 @@
 ---
 openbet_stack_repo_url: 'ssh://git@bitbucket.openbet.com:7999/sbt/openbet-stack.git'
 openbet_stack_repo_branch: 'master'
-openbet_stack_repo_dest: '{{ ansible_env.HOME }}/openbet-stack'
+openbet_stack_repo_dest: '/home/{{ ansible_user }}/openbet-stack'
 
 sportsbet_stack_repo_url: 'ssh://git@bitbucket.openbet.com:7999/sbt/sportsbet-stack.git'
 sportsbet_stack_repo_branch: 'master'
-sportsbet_stack_repo_dest: '{{ ansible_env.HOME }}/stack-configuration/sportsbet-stack'
+sportsbet_stack_repo_dest: '/home/{{ ansible_user }}/stack-configuration/sportsbet-stack'
 
-stack_configuration_dir: '{{ ansible_env.HOME }}/stack-configuration'
+stack_configuration_dir: '/home/{{ ansible_user }}/stack-configuration'
 sportsbet_symlink_src: '{{ sportsbet_stack_repo_dest }}/sportsbet'
 sportsbet_symlink_dest: '{{ stack_configuration_dir }}/sportsbet'

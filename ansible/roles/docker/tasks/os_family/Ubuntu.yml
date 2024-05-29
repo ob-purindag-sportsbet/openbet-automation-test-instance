@@ -38,7 +38,7 @@
 # Not needed for x86_64 or amd64
 - name: Define Docker repository architecture
   set_fact:
-    docker_repo_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
+    docker_repo_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
 
 - name: Set up the stable repository
   apt_repository:

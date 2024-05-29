@@ -1,7 +1,7 @@
 ---
 - name: Ensure bashrc includes necessary environment setup
   lineinfile:
-    path: "{{ ansible_env.HOME }}/.bashrc"
+    path: "/home/{{ ansible_user }}/.bashrc"
     line: "{{ item }}"
     create: yes
     state: present
@@ -9,3 +9,7 @@
     - 'export PATH=${PATH}:${HOME}/openbet-stack'
     - 'export STACK_PROJECT_DIR=${HOME}/stack-configuration'
     - 'source ${HOME}/openbet-stack/functions'
+  become: yes
+  become_user: "{{ ansible_user }}"
+  become_method: su
+  become_flags: '--login'

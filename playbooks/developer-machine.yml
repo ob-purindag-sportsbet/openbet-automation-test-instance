@@ -3,8 +3,8 @@ target: local
 
 # Local machine IP
 instance:
-  machine_ip: 10.211.55.4
-  username: parallels
+  machine_ip: 10.10.0.135
+  username: purinda
   ssh_key: ~/.ssh/id_rsa
 
 # Project specific parameters

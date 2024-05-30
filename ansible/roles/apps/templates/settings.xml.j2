@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd" xmlns="http://maven.apache.org/SETTINGS/1.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <servers>
+       <server>
+            <id>openbet.repository</id>
+        </server>
+        <server>
+            <id>artifactory01</id>
+        </server>
+        <!-- Add more servers as needed -->
+    </servers>
+    <profiles>
+        <profile>
+            <id>openbet.artifactory</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <name>OpenBet Repository</name>
+                    <url>{{ mvn_repository }}</url>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                    <id>openbet.plugins-release</id>
+                    <name>plugins-release</name>
+                    <url>{{ plugins_release_url }}</url>
+                </pluginRepository>
+                <pluginRepository>
+                    <snapshots />
+                    <id>openbet.plugins-snapshots</id>
+                    <name>plugins-snapshot</name>
+                    <url>{{ plugins_snapshot_url }}</url>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>openbet.artifactory</activeProfile>
+    </activeProfiles>
+</settings>

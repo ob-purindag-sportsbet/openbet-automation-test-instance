@@ -1,0 +1,21 @@
+---
+- name: Install Maven
+  ansible.builtin.package:
+    name: maven
+    state: present
+
+- name: Ensure .m2 directory exists
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.m2"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Configure Maven settings.xml
+  ansible.builtin.template:
+    src: "settings.xml.j2"
+    dest: "/home/{{ ansible_user }}/.m2/settings.xml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'

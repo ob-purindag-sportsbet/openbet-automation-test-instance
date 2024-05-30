@@ -1,61 +1,20 @@
 ---
-- name: Ensure base directories for releases are present
+- name: Install and configure Maven
+  include_tasks: setup_mvn.yml
+
+- name: Ensure the workspace directory is present
   ansible.builtin.file:
     path: "{{ release_base_dir }}"
     state: directory
-    mode: '0755'
-  become: no # Run as the Ansible user, not root
 
-- name: Change to the releases directory
-  ansible.builtin.command:
-    cmd: cd "{{ release_base_dir }}"
-  args:
-    chdir: "{{ release_base_dir }}"
-  register: change_dir
-  failed_when: change_dir.rc != 0
-  changed_when: false
+- name: Check if workspace directory is empty
+  ansible.builtin.find:
+    paths: "{{ release_base_dir }}"
+    file_type: any
+  register: files_in_directory
 
-- name: Ensure the working directory is clean
-  ansible.builtin.fail:
-    msg: "ERROR: Directory {{ release_base_dir }} is not empty"
-  when: lookup('ansible.builtin.fileglob', release_base_dir + '/*', wantlist=True) | length > 0
-
-- name: Clone and prepare each application
-  block:
-    - name: Clone repository for {{ item.name }}
-      ansible.builtin.git:
-        repo: "ssh://git@bitbucket.openbet.com:7999/sbt/{{ item.repo }}.git"
-        dest: "{{ release_base_dir }}/{{ item.directory }}"
-        version: "{{ item.version }}"
-        clone: yes
-        update: yes
-      with_items: "{{ applications }}"
-      # when: item.name == get_app or get_app == ''
-      register: setup_info_clone
-
-    - name: Set permissions for application directories
-      ansible.builtin.file:
-        path: "{{ release_base_dir }}/{{ item.0.directory }}"
-        state: directory
-        mode: '0777'
-        recurse: yes
-      with_items: "{{ setup_info_clone.results }}"
-      # when: item.0.name == get_app or get_app == ''
-      loop_control:
-        loop_var: item.0
-
-- name: Work on static artifacts
-  ansible.builtin.shell:
-    cmd: "mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:LATEST:unpack -Dproject.basedir=. -DoutputDirectory=. -DremoteRepositories=http://artifactory.int.openbet.com/artifactory/openbet-repository -Dartifact=com.openbet-sportsbet:{{ item.artifact }}:{{ item.version }}:tgz:static"
-    args:
-      chdir: "{{ release_base_dir }}/{{ item.directory }}"
-  when: item.static == 'Y'
-  with_items: "{{ applications }}"
-
-# - name: Work on static artifacts
-#   ansible.builtin.shell:
-#     cmd: "mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:LATEST:unpack -Dproject.basedir=. -DoutputDirectory=. -DremoteRepositories=http://artifactory.int.openbet.com/artifactory/openbet-repository -Dartifact=com.openbet-sportsbet:{{ item.artifact }}:{{ item.version }}:tgz:static"
-#   args:
-#     chdir: "{{ release_base_dir }}/{{ item.directory }}"
-#   when: item.static == 'Y'
-#   loop: "{{ applications }}"
+- name: Initialise or update each application
+  include_tasks: setup_app.yml
+  loop: "{{ applications }}"
+  loop_control:
+    loop_var: app

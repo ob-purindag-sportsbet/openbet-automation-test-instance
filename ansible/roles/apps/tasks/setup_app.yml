@@ -1,0 +1,45 @@
+---
+- name: Clone application repository
+  ansible.builtin.git:
+    repo: "{{ repos_base_url }}{{ app.repo }}.git"
+    dest: "{{ release_base_dir }}/{{ app.directory }}"
+    clone: yes
+    update: yes
+    force: yes
+  become: yes
+  become_user: "{{ ansible_user }}"
+  become_method: su
+  become_flags: '--login'
+  when: app.enabled | default(true)
+
+- name: Set permissions for application directories
+  ansible.builtin.file:
+    path: "{{ release_base_dir }}/{{ app.directory }}"
+    state: directory
+    mode: '0777'
+    recurse: yes
+  become: yes
+  become_user: "{{ ansible_user }}"
+  become_method: su
+  become_flags: '--login'
+  when: app.enabled | default(true)
+
+- name: Download and unpack Artifact
+  ansible.builtin.shell:
+    cmd: "mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:LATEST:unpack -Dproject.basedir=. -DoutputDirectory=. -DremoteRepositories={{ mvn_repository }} -Dartifact=com.openbet-sportsbet:{{ app.artifact }}:{{ app.version }}:tgz"
+    chdir: "{{ release_base_dir }}/{{ app.directory }}"
+  become: yes
+  become_user: "{{ ansible_user }}"
+  become_method: su
+  become_flags: '--login'
+  when: app.enabled and app.mvn | default(false)
+
+- name: Additional static artifact handling
+  ansible.builtin.shell:
+    cmd: "mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:LATEST:unpack -Dproject.basedir=. -DoutputDirectory=. -DremoteRepositories={{ mvn_repository }} -Dartifact=com.openbet-sportsbet:{{ app.artifact }}:{{ app.version }}:tgz:static"
+    chdir: "{{ release_base_dir }}/{{ app.directory }}"
+  become: yes
+  become_user: "{{ ansible_user }}"
+  become_method: su
+  become_flags: '--login'
+  when: app.enabled and app.static | default(false) and app.mvn | default(false)

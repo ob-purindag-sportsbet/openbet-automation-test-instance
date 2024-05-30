@@ -59,19 +59,19 @@
         groupname: launched
       when: target == 'local'
 
-- name: Base image setup
-  hosts: launched
-  become: yes
-  gather_facts: false
-  roles:
-    - { role: pre, tags: pre }
+# - name: Base image setup
+#   hosts: launched
+#   become: yes
+#   gather_facts: false
+#   roles:
+#     - { role: pre, tags: pre }
 
 - name: Configure Instance and OpenBet Applications
   hosts: launched
   become: yes
   gather_facts: true
   roles:
-    - { role: common, tags: common }
-    - { role: docker, tags: docker }
-    - { role: stack, tags: stack }
+    # - { role: common, tags: common }
+    # - { role: docker, tags: docker }
+    # - { role: stack, tags: stack }
     - { role: apps, tags: stack }

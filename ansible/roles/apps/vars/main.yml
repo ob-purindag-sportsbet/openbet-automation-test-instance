@@ -1,142 +1,165 @@
 ---
+# Maven settings
+mvn_repository: "https://artifactory.int.openbet.com/artifactory/openbet-repository"
+plugins_release_url: "https://artifactory.int.openbet.com/artifactory/plugins-release"
+plugins_snapshot_url: "https://artifactory.int.openbet.com/artifactory/plugins-snapshot"
+
+repos_base_url: "ssh://git@bitbucket.openbet.com:7999/sbt/"
 release_base_dir: "/home/{{ ansible_user }}/git_src/releases"
-# cashcard consumer 
-# cashcard consumer build
+
+release_version: "24.10.0" # move this out to launch parameters
 
 applications:
   - name: "db"
     repo: "db-build"
     artifact: "sportsbet-db-release-compiled"
     directory: "sportsbet-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "N"
+    version: "{{ release_version }}"
+    static: false
+    mvn: false
+    enabled: true
 
   - name: "core"
     repo: "parent-build"
-    artifact: "sportsbet-release-sources"
+    artifact: "sportsbet-db-release-compiled"
     directory: "sportsbet-release-sources"
-    version: "latest"
-    static: "Y"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: true
+    mvn: true
+    enabled: true
 
   - name: "obmw"
     repo: "obmw-build"
     artifact: "sportsbet-obmw-release-sources"
     directory: "sportsbet-release-sources/obmw"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: true
 
   - name: "stl_engine"
     repo: "settlement-engine-build"
     artifact: "sportsbet-stl-engine-release-sources"
     directory: "sportsbet-stl-engine-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "oxiapi"
     repo: "oxi-api-build"
     artifact: "sportsbet-oxi-api-release-sources"
     directory: "sportsbet-oxi-api-release-source"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "AF"
     repo: "activity-feeds-build"
     artifact: "sportsbet-activity-feeds-release-sources"
     directory: "sportsbet-activity-feeds-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "livepublish"
     repo: "livepublish-build"
     artifact: "sportsbet-livepublish-release-sources"
     directory: "sportsbet-livepublish-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "ntt_audit_java"
     repo: "ntt-audit-java-build"
     artifact: "sportsbet-ntt-audit-java-release-sources"
     directory: "sportsbet-ntt-audit-java-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "HUC"
     repo: "hier-upd-consumer-build"
     artifact: "sportsbet-hier-upd-consumer-release-sources"
     directory: "hierarchy-update-consumer-release/sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   # Double check the below apps list to make sure paths are correct
   - name: "parent_build"
     repo: "parent-build"
     artifact: "sportsbet-parent-build-release-sources"
     directory: "sportsbet-parent-build-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "oxiapi_build"
     repo: "oxi-api-build"
     artifact: "sportsbet-oxi-api-build-release-sources"
     directory: "sportsbet-oxi-api-build-release-source"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "obmw_build"
     repo: "obmw-build"
     artifact: "sportsbet-obmw-build-release-sources"
     directory: "sportsbet-release-sources/obmw-build"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "AF_build"
     repo: "activity-feeds-build"
     artifact: "sportsbet-activity-feeds-build-release-sources"
     directory: "sportsbet-activity-feeds-build-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "settlement_engine_build"
     repo: "settlement-engine-build"
     artifact: "sportsbet-settlement-engine-build-release-sources"
     directory: "sportsbet-settlement-engine-build-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "livepublish_build"
     repo: "livepublish-build"
     artifact: "sportsbet-livepublish-build-release-sources"
     directory: "sportsbet-livepublish-build-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "ntt_audit_java_build"
     repo: "ntt-audit-java-build"
     artifact: "sportsbet-ntt-audit-java-build-release-sources"
     directory: "sportsbet-ntt-audit-java-build-release-sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false
 
   - name: "HUC_build"
     repo: "hier-upd-consumer-build"
     artifact: "sportsbet-hier-upd-consumer-build-release-sources"
     directory: "hierarchy-update-consumer-build-release/sources"
-    version: "latest"
-    static: "N"
-    mvn: "Y"
+    version: "{{ release_version }}"
+    static: false
+    mvn: true
+    enabled: false

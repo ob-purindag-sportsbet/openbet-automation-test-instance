@@ -1,3 +1,8 @@
+# THIS REPO IS NOT MAINTAINED
+
+New repository is hosted at https://bitbucket.openbet.com/projects/SBT/repos/container-host-provisioner/browse?at=main
+
+
 # Container Host Machine Provisioner
 
 For project goals and objectives, please refer to the Wiki article here

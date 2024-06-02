@@ -63,3 +63,122 @@ security_group:
     from_port: -1
     to_port: -1
     cidr_ip: 0.0.0.0/0
+
+
+
+# Project Settings
+Project: "Openbet"
+Service: "autotest"
+
+# Stack and DNS Standards
+# Truncate string to 6 characters to cater for a limit of 32 character names on ELBs
+# Using regex_replace to strip out leading branch paths on branch deploys (e.g.
+# "feature/new-feature" would become "new-feature")
+Environment: tst
+StackId: "{{ (StackIdentifier | default('') | regex_replace('^[^/]+/') | replace('/','') | replace('-','') | replace('_','') | truncate(6, True, '', 0)) or (ReleaseStackId | default('master'))}}"
+StackPrefix: "ob-{{ Service }}-{{ Environment }}"
+DnsSwitchName: openbet-autotest-{{ Environment }}
+AppStack: "{{StackPrefix}}-{{StackId}}-app"
+
+CommonStackId: "{{ CommonStackIdentifier |default('common') |replace('/','')|replace('-','')|truncate(10, True, '', 0)}}"
+CommonIAMStack: '{{ StackPrefix }}-{{ CommonStackId }}-iam'
+CommonSecurityStack: '{{ StackPrefix }}-{{ CommonStackId }}-security'
+
+# Cloudformation parameters and settings
+StackSize: devsize
+Region: "ap-southeast-2"
+InstanceType: t3.large
+MinSize: 1
+DesiredCapacity: 1
+MaxSize: 1
+AutoScalingState: disabled
+ApplicationUser: openbet@sportsbet.com.au
+
+isSiteManagedBox: 'true'
+Repository: "https://github.com/ob-purindag-sportsbet/openbet-automation-test-instance.git"
+InfraBuildBucket: sb-openbet-infra-builds-hxnhl8gpmfyp
+AppBuildBucket: sb-openbet-app-builds-hxnhl8gpmfyp
+
+# Instruct load-balancer to redirect HTTP to HTTPs
+RedirectHttpToHttps: 'true'
+AssociateWebACL: 'true'
+
+DeployEnvMap:
+  dev:
+    KeyName: "{{ lookup('env', 'SSH_KEY_NAME') or 'cloud-ob-dev-22052018' }}"
+    DisableLaunchLifecycleHook: 'true'
+    CreateAlarms: false
+    TerminationProtection: false
+  tst:
+    KeyName: cloud-ob-dev-22052018
+    DisableLaunchLifecycleHook: 'true'
+    CreateAlarms: false
+    TerminationProtection: false
+
+CreateAlarms: '{{ DeployEnvMap[Environment].CreateAlarms }}'
+KeyName: '{{ DeployEnvMap[Environment].KeyName }}'
+ELBDNSHostname: "{{ AppStack }}-lb"
+DisableLaunchLifecycleHook: '{{ DeployEnvMap[Environment].DisableLaunchLifecycleHook }}'
+DisableLogsBackupLifecycleHook: 'false'
+ForceSuccess: 'false'
+StackState: present
+State: '{{ StackState }}' # this is included for backwards compatibility
+ChangeSet: 'no'
+AMI: "{{ lookup('aws_ssm', '/app/ob/' + Environment + '/' + 'admin' + '/ami-id', region=Region) }}"
+AlbTier: app
+AlbHealthCheck: /health
+AlbPort: 80
+AlbPortSSL: 443
+AlbTimeout: '600'
+InstancePort: 8080
+AlbLoggingEnabled: 'false'
+BootstrapScriptS3Path: 's3://sb-openbet-infra-builds-hxnhl8gpmfyp/releases/aws-lib/stable/v1.1.0/bootstrap.sh'
+LiveRollingDeployment: true
+
+TerminationProtection: '{{ DeployEnvMap[Environment].TerminationProtection }}'
+
+EstimatedInstanceWarmup: 80
+CPUPolicyTargetValue: 30
+AlarmThreshold5xx: 50
+EnableGroupMetricsCollection: false
+
+MemcachedAccessSG: none
+
+EbsOptimized: true
+RootVolumeSize: '100'
+AppVolume1Size: 'not-required'
+AppVolume1Type: 'gp3'
+
+AttachToFrontend: false
+AttachToPrivateFrontend: '{{ AttachToFrontend }}'
+AttachToPublicFrontend: false
+FrontendService: 'undefined'
+NttInformixAccess: false
+isUserApiApp: false
+RedirectHttpToHttps: 'false'
+EnableHighLoadEventScaling: 'false'
+HighLoadEventMinSize: 1
+EnableStlRateScaling: 'false'
+StlRateThreshold: 0
+TreatMissingDataAs: 'missing'
+EnableLoadTestProfile: 'false'
+LoadTestProfileList: "{{ lookup('env','LoadTestProfileList') | default('0,0', true)}}"
+AssociateWebACL: 'false'
+
+CI: "{{ lookup('env','CI') == 'true' }}"       # True if running from Jenkins
+AlarmUrgency: 'HIGHURGENCY'
+
+EnableScheduledScaling: "{{ lookup('env','EnableScheduledScaling') | default('false', true) }}"
+ScheduledScalingList: "{{ lookup('env','ScheduledScalingList') | default('0,0,0', true)}}"
+
+# defaults for tagging
+Contact: "sportsbet-team@openbet.com"
+CostCentre: "Openbet"
+BackupType: "NotRequired"
+HA: "MultiAZ ActiveActive"
+PatchMethod: "CICD"
+PublicFacing: false
+InformationSubClassification: "Category 1 PII"
+CrowdStrike: "In"
+
+MinSuccessfulPercent: 100

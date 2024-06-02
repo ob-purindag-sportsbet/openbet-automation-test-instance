@@ -1,0 +1,1138 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Openbet Application Stack
+
+Parameters:
+  StackPrefix:
+    Description: Stack Prefix
+    Type: String
+  StackId:
+    Description: Stack Identifier
+    Type: String
+  StackSize:
+    Description: Cloudformation environment used to build the stack
+    Type: String
+  Project:
+    Description: The name of the application family used for alerting
+    Type: String
+  Environment:
+    Description: The name of the application
+    Type: String
+  Service:
+    Description: The name of the application
+    Type: String
+  CostCentre:
+    Description: CostCentre
+    Type: String
+  ApplicationUser:
+    Description: The account owner email address
+    Type: String
+  Ami:
+    Description:  EC2 Ami
+    Type: String
+  MinSize:
+    Description:  ASG Min Number
+    Type: String
+  DesiredCapacity:
+    Description:  ASG Desired Capacity Number
+    Type: String
+  MaxSize:
+    Description:  ASG Max Number
+    Type: String
+  MinSuccessfulPercent:
+    Description:  The percentage of the successful instances in auto scaling group above which auto scaling is considered as successful.
+    Type: Number
+  InstanceType:
+    Description:  Instance Type
+    Type: String
+  AlbTier:
+    Description:  Alb subnet tier - app or web
+    Type: String
+    AllowedValues:
+      - 'app'
+      - 'web'
+  AlbHealthCheck:
+    Description:  Load Balancer Health Check
+    Type: String
+  AlbPort:
+    Description:  Load Balancer Port
+    Type: String
+  AlbPortSSL:
+    Description:  Load Balancer SSL Port
+    Type: String
+  AlbTimeout:
+    Description: Idle timeout value in seconds for the Alb
+    Type: String
+  InstancePort:
+    Description:  Instance Port
+    Type: String
+  AlbLoggingEnabled:
+    Description: Enable ALB Logging
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  CreateAlarms:
+    Description: Determine whether to create alarms
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  KeyName:
+    Description: EC2 Key
+    Type: String
+  Account:
+    Description: Account in which to deploy the stack
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /global/account/accounttype
+  AutoScalingState:
+    Description: Determine whether to autoscale by Simple (deprecated) or Target Tracking Scaling
+    Type: String
+    AllowedValues:
+      - 'disabled'
+      - 'target-tracking'
+    Default: disabled
+  EstimatedInstanceWarmup:
+    Description: Instances Need estimated seconds to warm up after scaling
+    Type: String
+  CPUPolicyTargetValue:
+    Description: Target Average CPU Utilization Value for Target Tracking Scaling
+    Type: String
+  BootstrapScriptS3Path:
+    Description: Path to the bootstrap script in S3
+    Type: String
+  ForceSuccess:
+    Description: Force successful signal from userdata
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  DisableLaunchLifecycleHook:
+    Description: Disable launch lifecycle hook actions
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  DisableLogsBackupLifecycleHook:
+    Description: Disable logs backup lifecycle hook actions
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  EnableGroupMetricsCollection:
+    Description: Enable Group Metrics Collection for an ASG into CloudWatch
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  MemcachedAccessSG:
+    Description: Security Group for memcached access
+    Type: String
+    Default: 'none'
+  ELBDNSHostname:
+    Description: Hostname for the DNS record being created in Route53
+    Type: String
+  LiveRollingDeployment:
+    Description: Specify whether existing instances should remain active during a rolling deploy
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  EbsOptimized:
+    Description: EBS optimized
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  RootVolumeSize:
+    Description: Option to create larger root volume
+    Type: String
+  AppVolume1Size:
+    Description: Option to create separate EBS volume for the application
+    Type: String
+  AppVolume1Type:
+    Description: Volume Type
+    Type: String
+  AttachToPrivateFrontend:
+    Description: Whether the ASG should attach to the private frontend target group for this deployment
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  AttachToPublicFrontend:
+    Description: Whether the ASG should attach to the public frontend target group for this deployment
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  FrontendService:
+    Description: Service name for the frontend which this app should attach to
+    Type: String
+  NttInformixAccess:
+    Description: Whether the instance should have access to the NttInformix Database
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  isUserApiApp:
+    Description: Whether the instance is the User-Api app which needs an extra security group
+    Type: String
+    AllowedValues:
+      - 'true'
+      - 'false'
+  AlarmThreshold5xx:
+    Description:  Alarm Threshold of the 5xx HTTP status codes
+    Type: String
+  isSiteManagedBox:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+  AlarmUrgency:
+    Type: String
+    AllowedValues: ['HIGHURGENCY','LOWURGENCY']
+    Default: 'HIGHURGENCY'
+  EnableScheduledScaling:
+    Type: String
+    Default: false
+    Description: Enable scheduled scaling actions for apps
+  ScheduledScalingList:
+    Type: List<String>
+    Default: "0,0,0"
+    Description: Scaling values for scheduled scaling profiles defined in the order of "LOW, MEDIUM, HIGH"
+  RedirectHttpToHttps:
+    Type: String
+    Description: Whether to redirect load balancer from HTTP to HTTPs
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  EnableHighLoadEventScaling:
+    Type: String
+    Default: false
+    Description: Enable high load event scaling for apps
+    AllowedValues:
+      - 'true'
+      - 'false'
+  HighLoadEventMinSize:
+    Description:  Scaling value for high load event
+    Type: String
+  AppId:
+    Description: App id to identify stack
+    Type: String
+    Default: ''
+  EnableStlRateScaling:
+    Description: Whether the auto scaling should be enabled
+    Type: String
+    AllowedValues: ['true', 'false']
+  StlRateThreshold:
+    Description: Settlement rate threshold
+    Type: String
+  TreatMissingDataAs:
+    Type: String
+    Default: 'missing'
+  EnableLoadTestProfile:
+    Type: String
+    Default: 'false'
+    Description: Enable load test scaling actions
+  LoadTestProfileList:
+    Type: List<String>
+    Default: "0,0"
+    Description: Scaling values for load test profiles defined in the order of "large, xlarge"
+  AssociateWebACL:
+    Type: String
+    Description: Whether or not to associate the resource to the openbet web acl
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+Conditions:
+  CreateAlarms: !Equals [!Ref CreateAlarms, 'true']
+  EnableStlRateScaling: !Equals [!Ref EnableStlRateScaling, 'true']
+  EnableAutoscalingTT: !Equals [!Ref AutoScalingState, 'target-tracking']
+  DisableLaunchLifecycleHook:
+    Fn::Or:
+      - !Equals [!Ref ForceSuccess, 'true']
+      - !Equals [!Ref DisableLaunchLifecycleHook, 'true']
+  DisableLogsBackupLifecycleHook: !Equals [!Ref DisableLogsBackupLifecycleHook, 'true']
+  EnableGroupMetricsCollection: !Equals [!Ref EnableGroupMetricsCollection, 'true']
+  MemcachedAccess: !Not [ !Equals [!Ref MemcachedAccessSG, 'none'] ]
+  SetRootVolumeSize: !Not [ !Equals [!Ref RootVolumeSize, 'default'] ]
+  SetAppVolume1: !Not [ !Equals [!Ref AppVolume1Size, 'not-required'] ]
+  AttachToPrivateFrontend: !Equals [ !Ref AttachToPrivateFrontend, 'true' ]
+  AttachToPublicFrontend: !Equals [ !Ref AttachToPublicFrontend, 'true' ]
+  AttachToFrontend:
+    !Or
+      - Condition: AttachToPrivateFrontend
+      - Condition: AttachToPublicFrontend
+  NttInformixAccess: !Equals [ !Ref NttInformixAccess, 'true' ]
+  AddCrossAccountSecurity: !Equals [ !Ref AlbTier, 'web']
+  isUserApiApp: !Equals [ !Ref isUserApiApp, 'true']
+  CheckMinForLowProfile:
+    Fn::Not:
+      - Fn::Or:
+        - !Equals [ !Select [ '0', !Ref ScheduledScalingList ], '']
+        - !Equals [ !Select [ '0', !Ref ScheduledScalingList ], 'None']
+        - !Equals [ !Select [ '0', !Ref ScheduledScalingList ], '0']
+  CheckMinForMediumProfile:
+    Fn::Not:
+      - Fn::Or:
+        - !Equals [ !Select [ '1', !Ref ScheduledScalingList ], '']
+        - !Equals [ !Select [ '1', !Ref ScheduledScalingList ], 'None']
+        - !Equals [ !Select [ '1', !Ref ScheduledScalingList ], '0']
+  CheckMinForHighProfile:
+    Fn::Not:
+      - Fn::Or:
+        - !Equals [ !Select [ '2', !Ref ScheduledScalingList ], '']
+        - !Equals [ !Select [ '2', !Ref ScheduledScalingList ], 'None']
+        - !Equals [ !Select [ '2', !Ref ScheduledScalingList ], '0']
+  EnableScheduledScalingApps: !Equals [!Ref EnableScheduledScaling, 'True']
+  EnableScheduledScaleActions:
+    Fn::And:
+      - Fn::Not:
+          - Condition: EnableAutoscalingTT
+      - Fn::Not:
+          - Condition: EnableScheduledScalingApps
+      - Fn::Not:
+          - Condition: EnableStlRateScaling
+      - Fn::Or:
+          - !Equals [!Ref Environment, 'stg']
+          - !Equals [!Ref Environment, 'prf']
+  isSiteManagedBox: !Equals [!Ref isSiteManagedBox, 'true']
+  isZeroDesiredCapacity: !Equals [!Ref DesiredCapacity, 0]
+  RedirectHttpToHttps: !Equals [ !Ref RedirectHttpToHttps, 'true']
+  EnableHighLoadEventScaling: !Equals [!Ref EnableHighLoadEventScaling, 'true']
+  EnableLoadTestProfile: !Equals [!Ref EnableLoadTestProfile, 'true']
+  AssociateWebACL: !Equals [!Ref AssociateWebACL, 'true']
+  EnableCPUCreditAlarm:
+    Fn::And:
+      - Condition: CreateAlarms
+      - !Equals [ !Select [ 0, !Split [ ".", !Ref InstanceType ]], "t3" ]
+
+Resources:
+  Alb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub "${Service}-${Environment}-${StackId}${AppId}"
+      Scheme: internal
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: !Ref AlbTimeout
+      - Key: access_logs.s3.enabled
+        Value: !Ref AlbLoggingEnabled
+      - Key: access_logs.s3.bucket
+        Value: !ImportValue sb-openbet-logs-bucket
+      - Key: access_logs.s3.prefix
+        Value: !Sub "alb-logs/${AWS::StackName}"
+      Subnets:
+        - Fn::ImportValue: !Sub "account-settings-vpc01-subnet-${AlbTier}-a-id"
+        - Fn::ImportValue: !Sub "account-settings-vpc01-subnet-${AlbTier}-b-id"
+        - Fn::ImportValue: !Sub "account-settings-vpc01-subnet-${AlbTier}-c-id"
+      SecurityGroups:
+      - Fn::ImportValue: !Sub "${StackPrefix}-common-sg-alb"
+      - Fn::ImportValue: securitygroups-OfficeAndVPN
+      - Fn::If:
+          - AddCrossAccountSecurity
+          - Fn::ImportValue: ob-common-crossaccount-sg
+          - !Ref AWS::NoValue
+      - Fn::If:
+          - isUserApiApp
+          - Fn::ImportValue: securitygroup-saviyntclient-app
+          - !Ref AWS::NoValue
+      Tags:
+      - Key: Name
+        Value: !Ref AWS::StackName
+      - Key: StackId
+        Value: !Ref StackId
+      - Key: CostCentre
+        Value: !Ref CostCentre
+      - Key: Project
+        Value: !Ref Project
+      - Key: Tier
+        Value: !Ref StackPrefix
+      - Key: CrowdStrike
+        Value: In
+
+  AlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Fn::If:
+        - RedirectHttpToHttps
+        -
+          RedirectConfig:
+            Host: '#{host}'
+            Path: '/#{path}'
+            Query: '#{query}'
+            Port: !Ref AlbPortSSL
+            Protocol: HTTPS
+            StatusCode: HTTP_302
+          Type: redirect
+        -
+          Type: forward
+          TargetGroupArn: !Ref 'AlbTargetGroup'
+      LoadBalancerArn: !Ref 'Alb'
+      Port: !Ref AlbPort
+      Protocol: HTTP
+
+  AlbListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+      - Fn::If:
+        - RedirectHttpToHttps
+        -
+          RedirectConfig:
+            Host: '#{host}'
+            Path: '/#{path}'
+            Query: '#{query}'
+            Port: !Ref AlbPortSSL
+            Protocol: HTTPS
+            StatusCode: HTTP_302
+          Type: redirect
+        -
+          Type: forward
+          TargetGroupArn: !Ref 'AlbTargetGroup'
+
+      Conditions:
+      - Field: path-pattern
+        Values: [/]
+      ListenerArn: !Ref 'AlbListener'
+      Priority: 5
+
+  AlbListenerSSL:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref 'AlbTargetGroup'
+      LoadBalancerArn: !Ref 'Alb'
+      Port: !Ref AlbPortSSL
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !ImportValue 'certificate-int-wildcard'
+
+  AlbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: !Ref AlbHealthCheck
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 3
+      Name: !Sub "${Service}-${Environment}-${StackId}${AppId}"
+      Port: !Ref InstancePort
+      Protocol: HTTP
+      VpcId: !ImportValue account-settings-vpc01-id
+      TargetGroupAttributes:
+      - Key: "load_balancing.algorithm.type"
+        Value: "least_outstanding_requests"
+
+  AlbDns:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !ImportValue account-settings-dns-int-hostedzone-id
+      Comment: !Join ['', [!Ref 'AWS::StackName', ' alb']]
+      Name: !Join [".", [ !Ref ELBDNSHostname, !ImportValue account-settings-dns-int-hostedzone-name ]]
+      Type: A
+      AliasTarget:
+        HostedZoneId: !GetAtt [Alb, CanonicalHostedZoneID]
+        EvaluateTargetHealth: false
+        DNSName: !GetAtt [Alb, DNSName]
+
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy:
+      AutoScalingCreationPolicy:
+        MinSuccessfulInstancesPercent: !Ref MinSuccessfulPercent
+      ResourceSignal:
+        Count: !Ref DesiredCapacity
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace:  !Ref LiveRollingDeployment
+      AutoScalingRollingUpdate:
+        MaxBatchSize: !If [isZeroDesiredCapacity, 1, !Ref DesiredCapacity]
+        # We want the old instances to be offline, as we don't know what the
+        # application behaviour will be if multiple instances are online.
+        MinInstancesInService: 0
+        MinSuccessfulInstancesPercent: !Ref MinSuccessfulPercent
+        PauseTime: PT15M
+        WaitOnResourceSignals: true
+    Properties:
+      TargetGroupARNs:
+        - !Ref 'AlbTargetGroup'
+        - Fn::If:
+            - AttachToPrivateFrontend
+            - Fn::ImportValue: !Sub ob-${FrontendService}-${Environment}-${StackId}-tg-private-${Service}
+            - !Ref AWS::NoValue
+        - Fn::If:
+            - AttachToPublicFrontend
+            - Fn::ImportValue: !Sub ob-${FrontendService}-${Environment}-${StackId}-tg-public-${Service}
+            - !Ref AWS::NoValue
+      LifecycleHookSpecificationList:
+        - Fn::If:
+            - DisableLaunchLifecycleHook
+            - !Ref AWS::NoValue
+            - DefaultResult: 'ABANDON'
+              HeartbeatTimeout: 600
+              LifecycleHookName: launch-hook
+              LifecycleTransition: autoscaling:EC2_INSTANCE_LAUNCHING
+        - Fn::If:
+            - DisableLogsBackupLifecycleHook
+            - !Ref AWS::NoValue
+            - LifecycleHookName: openbet-logs-backup-hook
+              DefaultResult: 'CONTINUE'
+              HeartbeatTimeout: 300
+              LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      MinSize: !Ref MinSize
+      DesiredCapacity: !Ref DesiredCapacity
+      MaxSize: !Ref MaxSize
+      MetricsCollection:
+        - Fn::If:
+            - EnableGroupMetricsCollection
+            -
+              Granularity: "1Minute"
+              Metrics:
+                - "GroupMinSize"
+                - "GroupMaxSize"
+                - "GroupDesiredCapacity"
+                - "GroupInServiceInstances"
+                - "GroupPendingInstances"
+                - "GroupStandbyInstances"
+                - "GroupTerminatingInstances"
+                - "GroupTotalInstances"
+            - !Ref AWS::NoValue
+      TerminationPolicies:
+      - NewestInstance
+      Cooldown: '300'
+      HealthCheckGracePeriod: 210
+      VPCZoneIdentifier:
+      - !ImportValue account-settings-vpc01-subnet-app-a-id
+      - !ImportValue account-settings-vpc01-subnet-app-b-id
+      - !ImportValue account-settings-vpc01-subnet-app-c-id
+      LaunchConfigurationName: !Ref 'LaunchConfig'
+      Tags:
+      - Key: Name
+        Value: !Ref AWS::StackName
+        PropagateAtLaunch: true
+      - Key: StackId
+        Value: !Ref StackId
+        PropagateAtLaunch: true
+      - Key: User
+        Value: !Ref ApplicationUser
+        PropagateAtLaunch: true
+      - Key: CostCentre
+        Value: !Ref CostCentre
+        PropagateAtLaunch: true
+      - Key: Description
+        Value:   Server
+        PropagateAtLaunch: true
+      - Key: Group
+        Value: !Ref Project
+        PropagateAtLaunch: true
+      - Key: Project
+        Value: !Ref Project
+        PropagateAtLaunch: true
+      - Key: Tier
+        Value: !Ref StackPrefix
+        PropagateAtLaunch: true
+      - Key: AccountName
+        Value: !ImportValue account-settings-accountname
+        PropagateAtLaunch: true
+      - Key: CrowdStrike
+        Value: In
+        PropagateAtLaunch: true
+      - Fn::If:
+        - isSiteManagedBox
+        -
+          Key: SiteManagedBox
+          Value: true
+          PropagateAtLaunch: true
+        - !Ref AWS::NoValue
+
+  OpenbetWebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Condition: AssociateWebACL
+    Properties:
+      ResourceArn: !Ref 'Alb'
+      WebACLArn: !ImportValue ob-common-web-acl-arn
+
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      InstanceType: !Ref InstanceType
+      EbsOptimized: !Ref EbsOptimized
+      KeyName: !Ref KeyName
+      IamInstanceProfile:
+        Fn::ImportValue: !Sub "${StackPrefix}-common-iam-default"
+      ImageId: !Ref Ami
+      SecurityGroups:
+        - Fn::ImportValue: !Sub "${StackPrefix}-common-sg-ec2"
+        - !ImportValue securitygroups-OfficeAndVPN
+        - !ImportValue ob-informix-common-access-sg
+        - Fn::If:
+            - AttachToFrontend
+            - Fn::ImportValue: !Sub ob-${FrontendService}-${Environment}-common-sg-ec2
+            - !Ref AWS::NoValue
+        - Fn::If:
+           - MemcachedAccess
+           - Fn::ImportValue: !Ref MemcachedAccessSG
+           - !Ref AWS::NoValue
+        - Fn::If:
+           - NttInformixAccess
+           - Fn::ImportValue: !Sub ob-informix-${Environment}-common-ntt-access-sg
+           - !Ref AWS::NoValue
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp3
+            VolumeSize:
+              Fn::If:
+                - SetRootVolumeSize
+                - !Ref RootVolumeSize
+                - !Ref AWS::NoValue
+        - Fn::If:
+          - SetAppVolume1
+          - DeviceName: /dev/xvdf
+            Ebs:
+              VolumeSize: !Ref AppVolume1Size
+              VolumeType: !Ref AppVolume1Type
+          - !Ref AWS::NoValue
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          . /etc/profile
+          mkdir -p /opt/sportsbet/logs
+          aws s3 cp '${BootstrapScriptS3Path}' '/opt/sportsbet/bootstrap.sh'
+          chmod +x '/opt/sportsbet/bootstrap.sh'
+          cat > /opt/sportsbet/bootstrap.cfg <<'EOF'
+          ACCOUNT='${Account}'
+          ANSIBLE_ROLE='app'
+          ASG_LOGICAL_NAME='ASG'
+          STACK_NAME='${AWS::StackName}'
+          STACK_SIZE='${StackSize}'
+          EOF
+          export DISABLE_LIFECYCLE_HOOK='${DisableLaunchLifecycleHook}'
+          export FORCE_SUCCESS='${ForceSuccess}'
+          bash /opt/sportsbet/bootstrap.sh  2>&1 | tee -a /opt/sportsbet/logs/bootstrap.log
+
+  NoHealthyHostsAlarm:
+    Condition: CreateAlarms
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-no-healthy-hosts"
+      AlarmDescription: "No healthy hosts in load balancer"
+      MetricName: HealthyHostCount
+      Namespace: AWS/ApplicationELB
+      Statistic: Minimum
+      Period: 60
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt Alb.LoadBalancerFullName
+        - Name: TargetGroup
+          Value: !GetAtt AlbTargetGroup.TargetGroupFullName
+      EvaluationPeriods: 3
+      Threshold: 0.4
+      TreatMissingData: !Ref TreatMissingDataAs
+      InsufficientDataActions:
+        - Fn::ImportValue: ob-common-sns-default
+      OKActions:
+        - Fn::ImportValue: ob-common-sns-default
+      AlarmActions:
+        - Fn::ImportValue: ob-common-sns-default
+      ComparisonOperator: LessThanThreshold
+
+  UnHealthyHostsAlarmWarning:
+    Condition: CreateAlarms
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-unhealthy-hosts-warning"
+      AlarmDescription: "Unhealthy host LOWURGENCY"
+      MetricName: UnHealthyHostCount
+      Namespace: AWS/ApplicationELB
+      Statistic: Maximum
+      Period: 60
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt Alb.LoadBalancerFullName
+        - Name: TargetGroup
+          Value: !GetAtt AlbTargetGroup.TargetGroupFullName
+      EvaluationPeriods: 3
+      Threshold: 0.9
+      TreatMissingData: !Ref TreatMissingDataAs
+      InsufficientDataActions:
+        - Fn::ImportValue: ob-common-sns-default
+      OKActions:
+        - Fn::ImportValue: ob-common-sns-default
+      AlarmActions:
+        - Fn::ImportValue: ob-common-sns-default
+      ComparisonOperator: GreaterThanThreshold
+
+  RootFileSystemSpaceAlarm:
+    Condition: CreateAlarms
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-root-fs-space"
+      AlarmDescription: "Root File System Space"
+      MetricName: disk_used_percent
+      Namespace: CWAgent
+      Statistic: Maximum
+      Period: 60
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref ASG
+        - Name: path
+          Value: /
+      EvaluationPeriods: 3
+      Threshold: 90
+      TreatMissingData: !Ref TreatMissingDataAs
+      InsufficientDataActions:
+        - Fn::ImportValue: ob-common-sns-default
+      OKActions:
+        - Fn::ImportValue: ob-common-sns-default
+      AlarmActions:
+        - Fn::ImportValue: ob-common-sns-default
+      ComparisonOperator: GreaterThanThreshold
+
+  #SBT-36047 The extra file system will be mounted during the bootstrap.
+  # https://github.com/Sportsbet-Internal/openbet-common/tree/master/bootstrap/ansible-common/roles/setup_disks/tasks/main.yml
+  # The extra volume is only available to stg and prd.
+  # The cloudwatch alarm is only enabled for stg and prd.
+  ExtraFileSystemSpaceAlarm:
+    Condition: CreateAlarms
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-extra-fs-space"
+      AlarmDescription: "Extra File System Space"
+      MetricName: disk_used_percent
+      Namespace: CWAgent
+      Statistic: Maximum
+      Period: 60
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref ASG
+        - Name: path
+          Value: /mnt/data01
+      EvaluationPeriods: 3
+      Threshold: 95
+      TreatMissingData: !Ref TreatMissingDataAs
+      InsufficientDataActions:
+        - Fn::ImportValue: ob-common-sns-default
+      OKActions:
+        - Fn::ImportValue: ob-common-sns-default
+      AlarmActions:
+        - Fn::ImportValue: ob-common-sns-default
+      ComparisonOperator: GreaterThanThreshold
+
+  ScaleUpPolicyTT:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: EnableAutoscalingTT
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      EstimatedInstanceWarmup: !Ref EstimatedInstanceWarmup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        DisableScaleIn: false
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: !Ref CPUPolicyTargetValue
+
+  ScheduledScaleUpPolicy:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: EnableScheduledScaleActions
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      MaxSize: !Ref MaxSize
+      MinSize: !Ref MinSize
+      DesiredCapacity: !Ref DesiredCapacity
+      Recurrence: "0 21 * * 0-4"
+
+  ScheduledScaleDownPolicy:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: EnableScheduledScaleActions
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      MaxSize: 1
+      MinSize: 1
+      DesiredCapacity: 1
+      Recurrence: "0 10 * * 1-5"
+
+  # Schedule scale up to MEDIUM profile for the weekday; (Mo-Tu-We-Th-Fr) 1300 hours
+  ScheduledScaleUpPolicyAppsWeekday:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: EnableScheduledScalingApps
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      MinSize:
+        Fn::If:
+          - CheckMinForMediumProfile
+          - !Select [ '1', !Ref ScheduledScalingList ]
+          - !Ref MinSize
+      Recurrence: "0 13 * * 1-5"
+      TimeZone: "Australia/Melbourne"
+
+  # Schedule scale up to HIGH profile for the early start of weekend; (Fr) 1800 hours
+  ScheduledScaleUpPolicyAppsWeekendEarlyStart:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: EnableScheduledScalingApps
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      MinSize:
+        Fn::If:
+          - CheckMinForHighProfile
+          - !Select [ '2', !Ref ScheduledScalingList ]
+          - !Ref MinSize
+      Recurrence: "0 18 * * 5"
+      TimeZone: "Australia/Melbourne"
+
+  # Schedule scale up to HIGH profile for the weekend; (Sa-Su) 0900 hours
+  ScheduledScaleUpPolicyAppsWeekend:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: EnableScheduledScalingApps
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      MinSize:
+        Fn::If:
+          - CheckMinForHighProfile
+          - !Select [ '2', !Ref ScheduledScalingList ]
+          - !Ref MinSize
+      Recurrence: "0 9 * * 6-7"
+      TimeZone: "Australia/Melbourne"
+
+  # Schedule scale down to LOW profile for everyday; 0100 hours
+  ScheduledScaleDefaultPolicyApps:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: EnableScheduledScalingApps
+    Properties:
+      AutoScalingGroupName: !Ref ASG
+      MinSize:
+        Fn::If:
+          - CheckMinForLowProfile
+          - !Select [ '0', !Ref ScheduledScalingList ]
+          - !Ref MinSize
+      Recurrence: "0 1 * * *"
+      TimeZone: "Australia/Melbourne"
+
+  AlbHTTPCodeELB5XXTooHighAlarm:
+    Condition: CreateAlarms
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-alb-http-5xx"
+      AlarmDescription: !Sub "Application load balancer returns 5XX HTTP status codes - ${AlarmUrgency}"
+      Namespace: 'AWS/ApplicationELB'
+      MetricName: HTTPCode_ELB_5XX_Count
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: !Ref AlarmThreshold5xx
+      TreatMissingData: notBreaching # avoid INSUFFICIENT_DATA state
+      AlarmActions:
+        - Fn::ImportValue: ob-common-sns-default
+      OKActions:
+        - Fn::ImportValue: ob-common-sns-default
+      InsufficientDataActions:
+        - Fn::ImportValue: ob-common-sns-default
+      Dimensions:
+      - Name: LoadBalancer
+        Value: !GetAtt Alb.LoadBalancerFullName
+
+  # cpu credit metric is updated every 5 minute and hence, alarm period is set
+  # to 300 seconds.
+  # Since the instance starts with 0 cpu credit and needs to use CPUSurplusCreditBalance
+  # during first 10-15 minutes after startup, threshold is set to 5 not to trigger the
+  # alarm during startup
+  CPUCreditUsageExceedsAlarm:
+    Condition: EnableCPUCreditAlarm
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-cpu-credit-usage-exceeds"
+      AlarmDescription: "CPU credit usage exceeds CPU credit earned - LOWURGENCY"
+      Namespace: 'AWS/EC2'
+      MetricName: CPUSurplusCreditBalance
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 5
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - Fn::ImportValue: ob-common-sns-default
+      OKActions:
+        - Fn::ImportValue: ob-common-sns-default
+      InsufficientDataActions:
+        - Fn::ImportValue: ob-common-sns-default
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref ASG
+
+  AlbHTTPCodeTarget5XXTooHighAlarm:
+    Condition: CreateAlarms
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-alb-targets-http-5xx"
+      AlarmDescription: !Sub "Application load balancer receives 5XX HTTP status codes from targets - ${AlarmUrgency}"
+      Namespace: 'AWS/ApplicationELB'
+      MetricName: HTTPCode_Target_5XX_Count
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: !Ref AlarmThreshold5xx
+      TreatMissingData: notBreaching # avoid INSUFFICIENT_DATA state
+      AlarmActions:
+        - Fn::ImportValue: ob-common-sns-default
+      OKActions:
+        - Fn::ImportValue: ob-common-sns-default
+      InsufficientDataActions:
+        - Fn::ImportValue: ob-common-sns-default
+      Dimensions:
+      - Name: LoadBalancer
+        Value: !GetAtt Alb.LoadBalancerFullName
+
+  HighLoadEventAlarmOn:
+    Condition: EnableHighLoadEventScaling
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Threshold: 1
+      AlarmDescription: Upcoming high load event.
+      AlarmActions:
+      - Ref: HighLoadEventTopic
+      Namespace: Openbet/aws-metrics
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      MetricName: ob-high-load-event
+      Period: 60
+
+  HighLoadEventMinSizeThreshold:
+    Condition: EnableHighLoadEventScaling
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Threshold: !Ref HighLoadEventMinSize
+      AlarmDescription: MinSize threshold while high load event is ongoing.
+      AlarmActions:
+      - Ref: HighLoadEventTopic
+      Namespace: AWS/AutoScaling
+      MetricName: GroupMinSize
+      Dimensions:
+      - Name: "AutoScalingGroupName"
+        Value: !Ref ASG
+      Period: 60
+      ComparisonOperator: LessThanThreshold
+
+  HighLoadEventTopic:
+    Type: 'AWS::SNS::Topic'
+    Condition: EnableHighLoadEventScaling
+    Description: "Dummy topic to invoke high load event lambda function"
+    Properties:
+      Subscription:
+      - Endpoint: !GetAtt HighLoadEventFunction.Arn
+        Protocol: "lambda"
+
+  # Writing lambda function as inline so that ASG name can be referenced easily inside the function.
+  HighLoadEventFunction:
+    Type: AWS::Lambda::Function
+    Condition: EnableHighLoadEventScaling
+    Properties:
+      Handler: index.handler
+      Role:
+        Fn::ImportValue: !Sub "${StackPrefix}-common-iam-lambda-role-arn"
+      Runtime: python3.9
+      Timeout: 30
+      Code:
+        ZipFile: !Sub |+
+          import boto3
+          import json
+          from datetime import datetime, timedelta
+          def handler(event, context):
+            cw = boto3.client('cloudwatch', region_name = 'ap-southeast-2')
+            resob = cw.get_metric_statistics(
+                                  Namespace = "Openbet/aws-metrics",
+                                  MetricName = "ob-high-load-event",
+                                  StartTime = datetime.utcnow() - timedelta(seconds=60),
+                                  EndTime = datetime.utcnow(),
+                                  Period = 60,
+                                  Statistics = [ 'Maximum' ]
+                   )
+
+            if resob['Datapoints'][0]['Maximum'] > 0:
+              resag = cw.get_metric_statistics(
+                             Namespace = "AWS/AutoScaling",
+                             MetricName = "GroupMinSize",
+                             Dimensions = [
+                               {
+                                 "Name": "AutoScalingGroupName",
+                                 "Value": "${ASG}"
+                               },
+                             ],
+                             StartTime = datetime.utcnow() - timedelta(seconds=60),
+                             EndTime = datetime.utcnow(),
+                             Period = 60,
+                             Statistics = [ 'Average' ]
+                      )
+
+              if ${HighLoadEventMinSize} > resag['Datapoints'][0]['Average']:
+                asg = boto3.client('autoscaling', region_name = 'ap-southeast-2')
+                response = asg.update_auto_scaling_group(
+                                      AutoScalingGroupName = "${ASG}",
+                                      MinSize = ${HighLoadEventMinSize}
+                           )
+
+  HighLoadEventInvokePermission:
+    Type: "AWS::Lambda::Permission"
+    Condition: EnableHighLoadEventScaling
+    Properties:
+      FunctionName: !GetAtt HighLoadEventFunction.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn:  !Ref HighLoadEventTopic
+
+  ScaleOutStlRatePolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: EnableStlRateScaling
+    Properties:
+      AdjustmentType: ExactCapacity
+      AutoScalingGroupName: !Ref ASG
+      ScalingAdjustment: !Ref MaxSize
+      PolicyType: SimpleScaling
+
+  ScaleInStlRatePolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: EnableStlRateScaling
+    Properties:
+      AdjustmentType: ExactCapacity
+      AutoScalingGroupName: !Ref ASG
+      ScalingAdjustment: !Ref DesiredCapacity
+      PolicyType: SimpleScaling
+
+  StlRateAlarmHigh:
+    Condition: EnableStlRateScaling
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: 1
+      Statistic: Maximum
+      Threshold: !Ref StlRateThreshold
+      AlarmDescription: Scale up if the settle rate is high for the up coming events
+      AlarmActions:
+      - Ref: ScaleOutStlRatePolicy
+      Namespace: Openbet/aws-metrics
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: ob-max-stl-rate
+      Period: 60
+
+  StlRateAlarmLow:
+    Condition: EnableStlRateScaling
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: 180
+      Statistic: Maximum
+      Threshold: !Ref StlRateThreshold
+      AlarmDescription: Scale down if the future events don't have high settle rate.
+      AlarmActions:
+      - Ref: ScaleInStlRatePolicy
+      Namespace: Openbet/aws-metrics
+      ComparisonOperator: LessThanThreshold
+      MetricName: ob-max-stl-rate
+      Period: 60
+
+  LoadTestProfileEventRule:
+    Type: 'AWS::Events::Rule'
+    Condition: EnableLoadTestProfile
+    Properties:
+      EventPattern:
+        detail-type:
+          - 'Parameter Store Change'
+        source:
+          - 'aws.ssm'
+        detail:
+          name:
+            - !Sub "/platform/ob/${Environment}/load-test-profile"
+          type:
+            - 'String'
+      Targets:
+      - Arn: !GetAtt LoadTestProfileFunction.Arn
+        Id: TargetFunction
+
+  PermissionForEventsToInvokeLambda:
+    Type: 'AWS::Lambda::Permission'
+    Condition: EnableLoadTestProfile
+    Properties:
+      FunctionName: !GetAtt LoadTestProfileFunction.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:  !GetAtt LoadTestProfileEventRule.Arn
+
+  LoadTestProfileFunction:
+    Type: 'AWS::Lambda::Function'
+    Condition: EnableLoadTestProfile
+    Properties:
+      Handler: index.handler
+      Role:
+        Fn::ImportValue: !Sub "${StackPrefix}-common-iam-lambda-role-arn"
+      Runtime: python3.9
+      Timeout: 30
+      Code:
+        ZipFile:
+          Fn::Sub:
+          - |+
+            import boto3
+            import json
+            from datetime import datetime, timedelta
+            def handler(event, context):
+              newprofile = 'normal'
+              newsize = 0
+              client = boto3.client('ssm', region_name = 'ap-southeast-2')
+
+              try:
+                res = client.get_parameter(Name='/platform/ob/${Environment}/load-test-profile')
+              except:
+                newprofile = 'normal'
+              else:
+                newprofile = res['Parameter']['Value']
+
+              if newprofile == 'large':
+                newsize = ${largesize}
+              elif newprofile == 'xlarge':
+                newsize = ${xlargesize}
+
+              client = boto3.client('autoscaling', region_name = 'ap-southeast-2')
+
+              if newsize == 0:
+                res = client.update_auto_scaling_group(
+                                    AutoScalingGroupName = "${ASG}",
+                                    MinSize = ${MinSize},
+                                    DesiredCapacity = ${DesiredCapacity},
+                                    MaxSize = ${MaxSize}
+                      )
+              else:
+                res = client.update_auto_scaling_group(
+                                    AutoScalingGroupName = "${ASG}",
+                                    MinSize = newsize,
+                                    DesiredCapacity = newsize,
+                                    MaxSize = newsize
+                      )
+
+          - largesize: !Select [ '0', !Ref LoadTestProfileList ]
+            xlargesize: !Select [ '1', !Ref LoadTestProfileList ]
+
+Outputs:
+  AlbZoneId:
+    Description: Openbet Application Alb DNS Name Zone Id
+    Value: !GetAtt [Alb, CanonicalHostedZoneID]
+    Export:
+      Name: !Sub "${StackPrefix}-${StackId}${AppId}-dns-zoneid"
+
+  AlbDnsName:
+    Description: Openbet Application Alb DNS Name
+    Value: !GetAtt [Alb, DNSName]
+    Export:
+      Name: !Sub "${StackPrefix}-${StackId}${AppId}-dns-dnsname"

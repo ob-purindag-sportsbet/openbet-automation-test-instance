@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: OpenBet App Common - Security
+
+Parameters:
+  StackPrefix:
+    Description: Stack Prefix
+    Type: String
+  StackId:
+    Description: Stack Identifier
+    Type: String
+  AlbPort:
+    Description: Load Balancer Port
+    Type: String
+  AlbPortSSL:
+    Description: Load Balancer SSL Port
+    Type: String
+  InstancePort:
+    Description: Instance Port
+    Type: String
+
+Mappings:
+  Accounts:
+    '992204641047': # ob-dev
+      AppCidrRange: 10.133.240.0/21
+    '353880893236': # ob-stg
+      AppCidrRange: TODO
+    '719349184537': # ob-prd
+      AppCidrRange: TODO
+
+
+Resources:
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB Security Group
+      VpcId: !ImportValue account-settings-vpc01-id
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: !Ref AlbPort
+        ToPort: !Ref AlbPort
+        CidrIp: !ImportValue account-settings-vpc01-cidr
+      - IpProtocol: tcp
+        FromPort: !Ref AlbPortSSL
+        ToPort: !Ref AlbPortSSL
+        CidrIp: !ImportValue account-settings-vpc01-cidr
+      Tags:
+      - Key: Name
+        Value: !Sub "${AWS::StackName} ALB"
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Instance Security Group
+      VpcId: !ImportValue account-settings-vpc01-id
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: !Ref InstancePort
+        ToPort: !Ref InstancePort
+        SourceSecurityGroupId: !Ref AlbSecurityGroup
+      Tags:
+      - Key: Name
+        Value: !Sub "${AWS::StackName} Instance"
+
+
+Outputs:
+  ExportAlbSecurityGroup:
+    Description: Alb Security Group
+    Export:
+      Name: !Sub "${StackPrefix}-${StackId}-sg-alb"
+    Value: !Ref AlbSecurityGroup
+
+  ExportInstanceSecurityGroup:
+    Description: Instance Security Group
+    Export:
+      Name: !Sub "${StackPrefix}-${StackId}-sg-ec2"
+    Value: !Ref InstanceSecurityGroup
+
